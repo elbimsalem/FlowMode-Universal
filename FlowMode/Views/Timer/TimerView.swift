@@ -33,6 +33,15 @@ struct TimerView: View {
                 .contentShape(Circle())
                 .scaleEffect(isPressed ? 0.95 : 1.0)
                 .animation(.easeInOut(duration: 0.1), value: isPressed)
+                .onTapGesture(count: 2) {
+                    handleTimerDoubleTap()
+                }
+                .onTapGesture {
+                    handleTimerTap()
+                }
+                .onLongPressGesture(minimumDuration: 1.0) {
+                    handleTimerLongPress()
+                }
                 .simultaneousGesture(
                     DragGesture(minimumDistance: 0)
                         .onChanged { _ in
@@ -44,15 +53,6 @@ struct TimerView: View {
                             isPressed = false
                         }
                 )
-                .onTapGesture(count: 2) {
-                    handleTimerDoubleTap()
-                }
-                .onTapGesture {
-                    handleTimerTap()
-                }
-                .onLongPressGesture(minimumDuration: 1.0) {
-                    handleTimerLongPress()
-                }
                 
                 HStack(spacing: 20) {
                     Text("Break: \(timerService.settings.selectedPausePercentage)%")
@@ -91,6 +91,15 @@ struct TimerView: View {
             TimerPaywallView()
                 .environmentObject(subscriptionService)
         }
+        #if os(macOS)
+        .background(
+            Button("") {
+                handleTimerTap()
+            }
+            .keyboardShortcut(.space, modifiers: [])
+            .opacity(0)
+        )
+        #endif
     }
     
     private var displaySeconds: Int {
@@ -147,6 +156,8 @@ struct TimerView: View {
         #if os(iOS)
         let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
         impactFeedback.impactOccurred()
+        #elseif os(macOS)
+        NSSound.beep()
         #endif
         timerService.resetTimer()
     }
@@ -178,6 +189,8 @@ struct TimerView: View {
         #if os(iOS)
         let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
         impactFeedback.impactOccurred()
+        #elseif os(macOS)
+        NSSound.beep()
         #endif
         timerService.resetTimer()
     }
