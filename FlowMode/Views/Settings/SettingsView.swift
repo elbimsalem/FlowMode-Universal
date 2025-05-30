@@ -34,6 +34,8 @@ struct SettingsView: View {
                                 )
                                 
                                 Toggle("Stacked Time Display", isOn: $timerService.settings.useStackedTimeDisplay)
+                                
+                                Toggle("Show Timer Controls", isOn: $timerService.settings.showTimerControls)
                             }
                             .padding(.leading, 8)
                         }
@@ -287,6 +289,13 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Toggle("Stacked Time Display", isOn: $timerService.settings.useStackedTimeDisplay)
                         Text("Show time as HH/MM/SS stacked vertically")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Toggle("Show Timer Controls", isOn: $timerService.settings.showTimerControls)
+                        Text("Display play/pause/reset buttons below timer")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }

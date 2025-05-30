@@ -17,4 +17,5 @@ struct TimerSettings: Codable {
     var notifyMaxWorkTime: Bool = true
     var notifyPauseComplete: Bool = true
     var useStackedTimeDisplay: Bool = true
+    var showTimerControls: Bool = true
 }

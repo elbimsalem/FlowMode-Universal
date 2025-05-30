@@ -11,6 +11,7 @@ struct TimerView: View {
     @EnvironmentObject var timerService: TimerService
     @EnvironmentObject var subscriptionService: SubscriptionService
     @State private var showingPaywall = false
+    @State private var isPressed = false
     
     var body: some View {
         VStack(spacing: 40) {
@@ -27,6 +28,30 @@ struct TimerView: View {
                         timerState: timerService.timerState,
                         useStackedDisplay: timerService.settings.useStackedTimeDisplay
                     )
+                }
+                .frame(width: 250, height: 250)
+                .contentShape(Circle())
+                .scaleEffect(isPressed ? 0.95 : 1.0)
+                .animation(.easeInOut(duration: 0.1), value: isPressed)
+                .simultaneousGesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { _ in
+                            if !isPressed {
+                                isPressed = true
+                            }
+                        }
+                        .onEnded { _ in
+                            isPressed = false
+                        }
+                )
+                .onTapGesture(count: 2) {
+                    handleTimerDoubleTap()
+                }
+                .onTapGesture {
+                    handleTimerTap()
+                }
+                .onLongPressGesture(minimumDuration: 1.0) {
+                    handleTimerLongPress()
                 }
                 
                 HStack(spacing: 20) {
@@ -52,13 +77,15 @@ struct TimerView: View {
                 #endif
             }
             
-            TimerControlsView(
-                timerState: timerService.timerState,
-                onPlayPause: handlePlayPause,
-                onComplete: handleComplete,
-                onReset: handleReset,
-                isEnabled: subscriptionService.subscriptionStatus.hasActiveAccess
-            )
+            if timerService.settings.showTimerControls {
+                TimerControlsView(
+                    timerState: timerService.timerState,
+                    onPlayPause: handlePlayPause,
+                    onComplete: handleComplete,
+                    onReset: handleReset,
+                    isEnabled: subscriptionService.subscriptionStatus.hasActiveAccess
+                )
+            }
         }
         .sheet(isPresented: $showingPaywall) {
             TimerPaywallView()
@@ -75,7 +102,7 @@ struct TimerView: View {
         }
     }
     
-    private func handlePlayPause() {
+    private func handleTimerTap() {
         guard subscriptionService.subscriptionStatus.hasActiveAccess else {
             showingPaywall = true
             return
@@ -90,9 +117,42 @@ struct TimerView: View {
             timerService.resumeWorkTimer()
         case .workCompleted:
             timerService.startBreakTimer()
+        case .breaking:
+            timerService.pauseBreakTimer()
+        case .breakPaused:
+            timerService.resumeBreakTimer()
+        }
+    }
+    
+    private func handleTimerLongPress() {
+        guard subscriptionService.subscriptionStatus.hasActiveAccess else {
+            showingPaywall = true
+            return
+        }
+        
+        switch timerService.timerState {
+        case .working, .workPaused:
+            timerService.completeWorkTimer()
         default:
             break
         }
+    }
+    
+    private func handleTimerDoubleTap() {
+        guard subscriptionService.subscriptionStatus.hasActiveAccess else {
+            showingPaywall = true
+            return
+        }
+        
+        #if os(iOS)
+        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+        impactFeedback.impactOccurred()
+        #endif
+        timerService.resetTimer()
+    }
+    
+    private func handlePlayPause() {
+        handleTimerTap()
     }
     
     private func handleComplete() {

@@ -29,8 +29,10 @@ struct TimerDisplayView: View {
             }
         } else {
             Text(TimeFormatter.formatSeconds(seconds))
-                .font(.system(size: 60, weight: .light, design: .monospaced))
+                .font(.system(size: 42, weight: .light, design: .monospaced))
                 .foregroundColor(displayColor)
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
         }
     }
     

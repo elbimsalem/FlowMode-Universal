@@ -160,6 +160,34 @@ class TimerService: ObservableObject {
         }
     }
     
+    func pauseBreakTimer() {
+        timerState = .breakPaused
+        timer?.invalidate()
+        timer = nil
+        
+        // Cancel break complete notification when pausing
+        NotificationService.shared.cancelNotification(identifier: "breakComplete")
+    }
+    
+    func resumeBreakTimer() {
+        timerState = .breaking
+        pauseEndDate = Date().addingTimeInterval(Double(remainingPauseSeconds))
+        
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            self.updateBreakTime()
+        }
+        
+        // Reschedule break complete notification when resuming
+        if settings.notifyPauseComplete && remainingPauseSeconds > 0 {
+            NotificationService.shared.scheduleNotification(
+                title: "Break Complete",
+                body: "Your break is over. Ready to start working again?",
+                timeInterval: TimeInterval(remainingPauseSeconds),
+                identifier: "breakComplete"
+            )
+        }
+    }
+    
     func resetTimer() {
         timerState = .idle
         timer?.invalidate()
