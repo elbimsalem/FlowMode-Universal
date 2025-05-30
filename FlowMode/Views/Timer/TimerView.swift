@@ -9,6 +9,8 @@ import SwiftUI
 
 struct TimerView: View {
     @EnvironmentObject var timerService: TimerService
+    @EnvironmentObject var subscriptionService: SubscriptionService
+    @State private var showingPaywall = false
     
     var body: some View {
         VStack(spacing: 40) {
@@ -16,12 +18,14 @@ struct TimerView: View {
                 ZStack {
                     TimerProgressRing(
                         progress: timerService.progressPercentage,
-                        timerState: timerService.timerState
+                        timerState: timerService.timerState,
+                        pauseProgress: timerService.pauseProgressPercentage
                     )
                     
                     TimerDisplayView(
                         seconds: displaySeconds,
-                        timerState: timerService.timerState
+                        timerState: timerService.timerState,
+                        useStackedDisplay: timerService.settings.useStackedTimeDisplay
                     )
                 }
                 
@@ -52,8 +56,13 @@ struct TimerView: View {
                 timerState: timerService.timerState,
                 onPlayPause: handlePlayPause,
                 onComplete: handleComplete,
-                onReset: handleReset
+                onReset: handleReset,
+                isEnabled: subscriptionService.subscriptionStatus.hasActiveAccess
             )
+        }
+        .sheet(isPresented: $showingPaywall) {
+            TimerPaywallView()
+                .environmentObject(subscriptionService)
         }
     }
     
@@ -67,6 +76,11 @@ struct TimerView: View {
     }
     
     private func handlePlayPause() {
+        guard subscriptionService.subscriptionStatus.hasActiveAccess else {
+            showingPaywall = true
+            return
+        }
+        
         switch timerService.timerState {
         case .idle:
             timerService.startWorkTimer()
@@ -82,6 +96,11 @@ struct TimerView: View {
     }
     
     private func handleComplete() {
+        guard subscriptionService.subscriptionStatus.hasActiveAccess else {
+            showingPaywall = true
+            return
+        }
+        
         switch timerService.timerState {
         case .working, .workPaused:
             timerService.completeWorkTimer()
@@ -91,6 +110,11 @@ struct TimerView: View {
     }
     
     private func handleReset() {
+        guard subscriptionService.subscriptionStatus.hasActiveAccess else {
+            showingPaywall = true
+            return
+        }
+        
         #if os(iOS)
         let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
         impactFeedback.impactOccurred()

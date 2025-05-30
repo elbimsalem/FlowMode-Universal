@@ -12,6 +12,7 @@ struct TimerControlsView: View {
     let onPlayPause: () -> Void
     let onComplete: () -> Void
     let onReset: () -> Void
+    let isEnabled: Bool
     
     var body: some View {
         HStack(spacing: 40) {
@@ -20,6 +21,11 @@ struct TimerControlsView: View {
                     .font(.system(size: 60))
                     .foregroundColor(buttonColor)
             }
+            #if os(macOS)
+            .buttonStyle(.plain)
+            .clipShape(Circle())
+            #endif
+            .opacity(isEnabled ? 1.0 : 0.5)
             .onLongPressGesture {
                 onReset()
             }
@@ -29,6 +35,11 @@ struct TimerControlsView: View {
                     .font(.system(size: 60))
                     .foregroundColor(completeButtonColor)
             }
+            #if os(macOS)
+            .buttonStyle(.plain)
+            .clipShape(Circle())
+            #endif
+            .opacity(isEnabled ? 1.0 : 0.5)
             .disabled(!completeButtonEnabled)
             
             Button(action: onReset) {
@@ -36,6 +47,11 @@ struct TimerControlsView: View {
                     .font(.system(size: 60))
                     .foregroundColor(resetButtonColor)
             }
+            #if os(macOS)
+            .buttonStyle(.plain)
+            .clipShape(Circle())
+            #endif
+            .opacity(isEnabled ? 1.0 : 0.5)
             .disabled(!resetButtonEnabled)
         }
     }

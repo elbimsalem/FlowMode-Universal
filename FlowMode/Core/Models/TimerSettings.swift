@@ -16,4 +16,5 @@ struct TimerSettings: Codable {
     var pauseCompleteSound: String? = "Notification"
     var notifyMaxWorkTime: Bool = true
     var notifyPauseComplete: Bool = true
+    var useStackedTimeDisplay: Bool = true
 }

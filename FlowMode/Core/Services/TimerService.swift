@@ -32,6 +32,17 @@ class TimerService: ObservableObject {
     
     private var cancellables = Set<AnyCancellable>()
     
+    var pauseProgressPercentage: CGFloat {
+        switch timerState {
+        case .working, .workPaused:
+            // Outer ring should fill proportionally with work progress, up to the pause percentage
+            // If work is 50% done and pause is 20%, outer ring should show 10% (50% × 20%)
+            return progressPercentage * CGFloat(settings.selectedPausePercentage) / 100.0
+        default:
+            return 0.0
+        }
+    }
+    
     var progressPercentage: CGFloat {
         switch timerState {
         case .working, .workPaused:
@@ -39,8 +50,9 @@ class TimerService: ObservableObject {
                 let maxSeconds = settings.maxWorkTimeMinutes * 60
                 return CGFloat(elapsedSeconds) / CGFloat(maxSeconds)
             } else {
-                // No max time set, show indeterminate progress (always 0)
-                return 0.0
+                // No max time set, use 8 hours (28800 seconds) as reference
+                let referenceSeconds = 28800
+                return min(CGFloat(elapsedSeconds) / CGFloat(referenceSeconds), 1.0)
             }
         case .workCompleted, .breaking, .breakPaused:
             if remainingPauseSeconds > 0 {
@@ -77,6 +89,9 @@ class TimerService: ObservableObject {
         timerState = .workPaused
         timer?.invalidate()
         timer = nil
+        
+        // Cancel max work time notification when pausing
+        NotificationService.shared.cancelNotification(identifier: "maxWorkTime")
     }
     
     func resumeWorkTimer() {
@@ -85,6 +100,19 @@ class TimerService: ObservableObject {
         
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
             self.updateElapsedTime()
+        }
+        
+        // Reschedule max work time notification when resuming
+        if settings.maxWorkTimeEnabled && settings.notifyMaxWorkTime {
+            let remainingWorkTime = (settings.maxWorkTimeMinutes * 60) - elapsedSeconds
+            if remainingWorkTime > 0 {
+                NotificationService.shared.scheduleNotification(
+                    title: "Work Session Complete",
+                    body: "Time for a break! You've reached your maximum work time.",
+                    timeInterval: TimeInterval(remainingWorkTime),
+                    identifier: "maxWorkTime"
+                )
+            }
         }
     }
     
@@ -96,6 +124,9 @@ class TimerService: ObservableObject {
         timerState = .workCompleted
         timer?.invalidate()
         timer = nil
+        
+        // Cancel max work time notification since work is now complete
+        NotificationService.shared.cancelNotification(identifier: "maxWorkTime")
         
         let pauseSeconds = elapsedSeconds * settings.selectedPausePercentage / 100
         remainingPauseSeconds = pauseSeconds
@@ -154,6 +185,9 @@ class TimerService: ObservableObject {
         startTime = nil
         elapsedSeconds = 0
         remainingPauseSeconds = 0
+        
+        // Cancel any pending notifications when stopping timer
+        NotificationService.shared.cancelAllNotifications()
     }
     
     private func updateElapsedTime() {
@@ -185,6 +219,16 @@ class TimerService: ObservableObject {
         pauseEndDate = nil
         elapsedSeconds = 0
         remainingPauseSeconds = 0
+        
+        // Show notification for break completion
+        if settings.notifyPauseComplete {
+            NotificationService.shared.scheduleNotification(
+                title: "Break Complete",
+                body: "Your break is over. Ready to start working again?",
+                timeInterval: 0.1, // Immediate notification
+                identifier: "breakCompleteImmediate"
+            )
+        }
         
         // Play pause complete sound
         if let soundName = settings.pauseCompleteSound {

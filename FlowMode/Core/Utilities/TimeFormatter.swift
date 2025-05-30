@@ -13,10 +13,6 @@ struct TimeFormatter {
         let minutes = (seconds % 3600) / 60
         let remainingSeconds = seconds % 60
         
-        if hours > 0 {
-            return String(format: "%d:%02d:%02d", hours, minutes, remainingSeconds)
-        } else {
-            return String(format: "%02d:%02d", minutes, remainingSeconds)
-        }
+        return String(format: "%02d:%02d:%02d", hours, minutes, remainingSeconds)
     }
 }
