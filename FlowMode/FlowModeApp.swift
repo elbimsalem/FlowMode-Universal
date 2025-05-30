@@ -9,9 +9,29 @@ import SwiftUI
 
 @main
 struct FlowModeApp: App {
+    @StateObject private var timerService = TimerService()
+    #if os(iOS)
+    @StateObject private var backgroundTaskService: BackgroundTaskService
+    #endif
+    
+    init() {
+        let timer = TimerService()
+        _timerService = StateObject(wrappedValue: timer)
+        #if os(iOS)
+        _backgroundTaskService = StateObject(wrappedValue: BackgroundTaskService(timerService: timer))
+        #endif
+        
+        // Initialize notification service to request permissions
+        _ = NotificationService.shared
+    }
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainView()
+                .environmentObject(timerService)
+                #if os(iOS)
+                .environmentObject(backgroundTaskService)
+                #endif
         }
     }
 }
