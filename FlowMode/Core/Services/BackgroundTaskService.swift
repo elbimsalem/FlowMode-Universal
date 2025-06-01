@@ -16,9 +16,12 @@ class BackgroundTaskService: ObservableObject {
     private var backgroundTask: UIBackgroundTaskIdentifier = .invalid
     private var backgroundEntryTime: Date?
     
-    init(timerService: TimerService) {
-        self.timerService = timerService
+    init() {
         setupNotificationObservers()
+    }
+    
+    func setTimerService(_ timerService: TimerService) {
+        self.timerService = timerService
     }
     
     private func setupNotificationObservers() {

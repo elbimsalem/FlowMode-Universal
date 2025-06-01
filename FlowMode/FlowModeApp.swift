@@ -12,16 +12,10 @@ struct FlowModeApp: App {
     @StateObject private var timerService = TimerService()
     @StateObject private var subscriptionService = SubscriptionService.shared
     #if os(iOS)
-    @StateObject private var backgroundTaskService: BackgroundTaskService
+    @StateObject private var backgroundTaskService = BackgroundTaskService()
     #endif
     
     init() {
-        let timer = TimerService()
-        _timerService = StateObject(wrappedValue: timer)
-        #if os(iOS)
-        _backgroundTaskService = StateObject(wrappedValue: BackgroundTaskService(timerService: timer))
-        #endif
-        
         // Initialize services
         _ = NotificationService.shared
         _ = SubscriptionService.shared
@@ -35,6 +29,11 @@ struct FlowModeApp: App {
                 #if os(iOS)
                 .environmentObject(backgroundTaskService)
                 #endif
+                .onAppear {
+                    #if os(iOS)
+                    backgroundTaskService.setTimerService(timerService)
+                    #endif
+                }
         }
     }
 }
