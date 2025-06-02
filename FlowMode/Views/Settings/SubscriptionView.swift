@@ -74,21 +74,6 @@ struct SubscriptionView: View {
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
-            .toolbar {
-                #if os(iOS)
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-                #else
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-                #endif
-            }
             .alert("Error", isPresented: $showingError) {
                 Button("OK") { }
             } message: {

@@ -8,23 +8,9 @@
 import SwiftUI
 
 struct MainView: View {
-    @State private var showingSettings = false
-    
     var body: some View {
         #if os(macOS)
         TimerView()
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button(action: {
-                        showingSettings = true
-                    }) {
-                        Image(systemName: "gearshape")
-                    }
-                }
-            }
-            .sheet(isPresented: $showingSettings) {
-                SettingsView()
-            }
         #else
         TabView {
             TimerView()
@@ -42,3 +28,4 @@ struct MainView: View {
         #endif
     }
 }
+

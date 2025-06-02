@@ -35,5 +35,14 @@ struct FlowModeApp: App {
                     #endif
                 }
         }
+        
+        #if os(macOS)
+        Settings {
+            SettingsView()
+                .environmentObject(timerService)
+                .environmentObject(subscriptionService)
+        }
+        .windowResizability(.contentMinSize)
+        #endif
     }
 }
