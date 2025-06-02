@@ -143,3 +143,13 @@ Subscription errors are user-facing with specific error types. Settings persiste
 ## Current Development Status
 
 The app is production-ready with complete timer functionality, subscription system, cross-platform support, and premium feature gating. Latest enhancements include interactive timer controls with cross-platform gesture support and improved user experience.
+
+## Development Workflow Guidelines
+
+### Branch Management
+**IMPORTANT**: When switching branches, always ensure CLAUDE.md is synchronized with the actual codebase features. Each branch should have an accurate CLAUDE.md that reflects the current state of features and implementation details.
+
+### Testing Protocol
+- **Manual Testing**: User handles manual testing of builds and functionality
+- **Automated Testing**: Use xcodebuild commands for automated testing when needed
+- **Build Verification**: User responsibility for build verification and device testing
