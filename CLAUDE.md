@@ -6,21 +6,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 FlowMode is a cross-platform SwiftUI productivity timer app implementing the Flowmodoro technique. The app targets iOS 17.6+ and macOS 14.6+ with subscription-based monetization through StoreKit 2.
 
-## Development Commands
-
-### Building & Running
-```bash
-# Open in Xcode (primary development environment)
-open FlowMode.xcodeproj
-
-# Command line builds
-xcodebuild -project FlowMode.xcodeproj -scheme FlowMode -configuration Debug build
-xcodebuild -project FlowMode.xcodeproj -scheme FlowMode -configuration Release build
-
-# Run tests
-xcodebuild -project FlowMode.xcodeproj -scheme FlowMode test
-# Or use Cmd+U in Xcode
-```
 
 ### Target Configuration
 - **iOS Target**: FlowMode (iOS 17.6+)
@@ -142,14 +127,45 @@ Subscription errors are user-facing with specific error types. Settings persiste
 
 ## Current Development Status
 
-The app is production-ready with complete timer functionality, subscription system, cross-platform support, and premium feature gating. Latest enhancements include interactive timer controls with cross-platform gesture support and improved user experience.
+The app is production-ready with complete timer functionality, subscription system, cross-platform support, and premium feature gating. Latest enhancements include:
+
+### Visual Timer Feedback (Latest Update)
+**Key Features Added:**
+- **Timer Dimming**: Timer circle dims to 50% opacity when idle or work paused
+- **Smooth Animations**: 0.3-second easing animation for visual state changes
+- **Enhanced UX**: Clear visual feedback for timer states
+
+### NavigationSplitView Settings Interface
+**Key Features Added:**
+- **macOS**: Dedicated Settings window with Cmd+, support, resizable interface, and always-visible sidebar
+- **iOS**: NavigationSplitView-based settings with organized categories (Timer, Notifications, Subscription, About)
+- **Cross-Platform**: Consistent feature set with platform-appropriate UI patterns
+- **Clean Interface**: Removed unnecessary toolbar buttons for streamlined experience
+
+**Technical Implementation:**
+- Created SettingsCategory enum for type-safe navigation
+- Implemented modular setting views: TimerSettingsView, NotificationSettingsView, AboutSettingsView
+- Enhanced cross-platform Settings scene with proper window configuration
+- Maintained existing subscription functionality and debug controls
+
+**Previous Enhancements:**
+- Interactive timer controls with cross-platform gesture support (tap, double-tap, long-press)
+- Break timer pause/resume functionality
+- Platform-specific feedback (haptics, sound, keyboard shortcuts)
 
 ## Development Workflow Guidelines
 
+### CODING PROTOCOL 
+
+- Write the absolute minimum code required
+- No sweeping changes
+- No unrelated edits - focus on just the task you're on
+- Make code precise, modular, testable
+- Don't break existing functionality
+- If I need to do anything tell me clearly
 ### Branch Management
 **IMPORTANT**: When switching branches, always ensure CLAUDE.md is synchronized with the actual codebase features. Each branch should have an accurate CLAUDE.md that reflects the current state of features and implementation details.
 
 ### Testing Protocol
 - **Manual Testing**: User handles manual testing of builds and functionality
-- **Automated Testing**: Use xcodebuild commands for automated testing when needed
 - **Build Verification**: User responsibility for build verification and device testing
