@@ -32,6 +32,8 @@ struct TimerView: View {
                 .frame(width: 250, height: 250)
                 .contentShape(Circle())
                 .scaleEffect(isPressed ? 0.95 : 1.0)
+                .opacity(timerService.timerState == .workPaused || timerService.timerState == .idle ? 0.5 : 1.0)
+                .animation(.easeInOut(duration: 0.3), value: timerService.timerState == .workPaused || timerService.timerState == .idle)
                 .animation(.easeInOut(duration: 0.1), value: isPressed)
                 .onTapGesture(count: 2) {
                     handleTimerDoubleTap()
