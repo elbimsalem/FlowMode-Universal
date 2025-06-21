@@ -1,128 +1,26 @@
-# FlowMode Priority Fixes - Implementation Plan
+# FlowMode Granular Implementation Plan
 
-## Overview
-This document outlines critical stability and performance fixes for the FlowMode app, prioritized by impact and implementation complexity.
+Based on my analysis and the priority_fixes.md document, here's a detailed step-by-step plan. Fixes 1 and 2 are already completed, so we'll start with the remaining priority fixes and additional critical issues.
 
-## Priority 1: Critical Stability Fixes
+## Phase 1: Settings Persistence Debouncing (Priority Fix 3)
 
-### Fix 1: Remove Double TimerService Creation
-**Impact**: Critical - Causes memory waste and potential state inconsistencies  
-**Effort**: Low (5 minutes)  
-**Files**: `FlowModeApp.swift`
+### Step 1.1: Add Combine import to TimerService
+**File**: `FlowMode/Core/Services/TimerService.swift`
+**Action**: Add `import Combine` at the top if not already present
+**Test**: Build should succeed
 
-#### Current Issue
+### Step 1.2: Add debounce to settings observer
+**File**: `FlowMode/Core/Services/TimerService.swift`
+**Find**: Lines 25-31 in init()
 ```swift
-// FlowModeApp.swift:12, 18-23
-@StateObject private var timerService = TimerService()  // Instance 1
-
-init() {
-    let timer = TimerService()  // Instance 2 - PROBLEM
-    _timerService = StateObject(wrappedValue: timer)
-}
-```
-
-#### Implementation Steps
-1. **Remove the `init()` method entirely** in `FlowModeApp.swift`
-2. **Keep only the property declaration**: `@StateObject private var timerService = TimerService()`
-
-#### Testing Steps
-1. Build and run the app
-2. Verify timer functionality works correctly
-3. Check memory usage in Instruments (should see only one TimerService instance)
-4. Test timer start/stop/pause/reset operations
-5. Verify settings persistence works correctly
-
-#### Success Criteria
-- [x] App builds without warnings
-- [x] Timer functionality unchanged
-- [x] Memory usage reduced
-- [x] Single TimerService instance in memory profiler
-
-**✅ COMPLETED** - Implemented in commit 91a2116
-
----
-
-### Fix 2: Add Sound File Validation
-**Impact**: High - Prevents silent sound failures  
-**Effort**: Medium (30 minutes)  
-**Files**: `SoundService.swift`
-
-#### Current Issue
-```swift
-// SoundService.swift:196-214
-// No verification that sound files exist in bundle
-if let systemSoundName = soundMapping[soundName],
-   let soundURL = Bundle.main.url(forResource: systemSoundName, withExtension: "caf") ?? 
-                  Bundle.main.url(forResource: systemSoundName, withExtension: "m4a") {
-    // Could fail silently if files missing
-}
-```
-
-#### Implementation Steps
-1. **Add sound validation method** to `SoundService.swift`:
-```swift
-private static func validateSoundExists(_ soundName: String) -> Bool {
-    guard let systemSoundName = soundMapping[soundName] else { return false }
-    return Bundle.main.url(forResource: systemSoundName, withExtension: "caf") != nil ||
-           Bundle.main.url(forResource: systemSoundName, withExtension: "m4a") != nil
-}
-```
-
-2. **Add validation check** in `playSound` method:
-```swift
-static func playSound(named soundName: String, continuous: Bool = false) {
-    guard validateSoundExists(soundName) else {
-        print("⚠️ Sound file not found: \(soundName)")
-        return
-    }
-    // ... existing implementation
-}
-```
-
-3. **Add startup validation** in `availableSounds` computed property:
-```swift
-static var availableSounds: [SoundInfo] {
-    return allSounds.filter { validateSoundExists($0.name) }
-}
-```
-
-#### Testing Steps
-1. **Unit Test**: Create test to verify all bundled sounds exist
-2. **Manual Test**: Remove a sound file temporarily, verify app doesn't crash
-3. **UI Test**: Verify sound picker only shows available sounds
-4. **Integration Test**: Test sound playback for all available sounds
-
-#### Success Criteria
-- [x] All sound files validated at startup
-- [x] Missing sounds don't cause crashes
-- [x] Console logging for missing sound files
-- [x] Sound picker shows only validated sounds
-- [x] No ForEach duplicate ID warnings
-
-**✅ COMPLETED** - Implemented in commit 91a2116
-
----
-
-## Priority 2: Performance Optimizations
-
-### Fix 3: Implement Settings Persistence Debouncing
-**Impact**: Medium - Reduces excessive disk I/O  
-**Effort**: Medium (45 minutes)  
-**Files**: `TimerService.swift`
-
-#### Current Issue
-```swift
-// TimerService.swift:25-31
 self.$settings
     .dropFirst()
     .sink { [weak self] _ in
-        self?.saveSettings()  // Saves on every change - excessive I/O
+        self?.saveSettings()
     }
     .store(in: &cancellables)
 ```
-
-#### Implementation Steps
-1. **Add debouncing to settings persistence**:
+**Replace with**:
 ```swift
 self.$settings
     .dropFirst()
@@ -132,8 +30,12 @@ self.$settings
     }
     .store(in: &cancellables)
 ```
+**Test**: Rapidly change timer settings, verify only one save occurs after 500ms delay
 
-2. **Add error handling to saveSettings**:
+### Step 1.3: Add error handling to saveSettings
+**File**: `FlowMode/Core/Services/TimerService.swift`
+**Find**: `saveSettings()` method
+**Replace with**:
 ```swift
 private func saveSettings() {
     do {
@@ -141,16 +43,19 @@ private func saveSettings() {
         UserDefaults.standard.set(data, forKey: "TimerSettings")
     } catch {
         print("⚠️ Failed to save settings: \(error)")
-        // Could add user notification here
     }
 }
 ```
+**Test**: Settings should still save correctly
 
-3. **Add error handling to loadSettings**:
+### Step 1.4: Add error handling to loadSettings
+**File**: `FlowMode/Core/Services/TimerService.swift`
+**Find**: `loadSettings()` method
+**Replace with**:
 ```swift
 private static func loadSettings() -> TimerSettings {
     guard let data = UserDefaults.standard.data(forKey: "TimerSettings") else {
-        return TimerSettings() // No saved settings
+        return TimerSettings()
     }
     
     do {
@@ -161,96 +66,181 @@ private static func loadSettings() -> TimerSettings {
     }
 }
 ```
+**Test**: App should start with default settings if UserDefaults is corrupted
 
-#### Testing Steps
-1. **Performance Test**: Measure I/O operations with Instruments
-2. **Rapid Change Test**: Quickly adjust sliders, verify single save after delay
-3. **Error Simulation**: Corrupt UserDefaults, verify graceful fallback
-4. **Persistence Test**: Change settings, force quit app, verify settings restored
+## Phase 2: Memory Leak Fixes
 
-#### Success Criteria
-- [ ] Settings saved at most once per 500ms
-- [ ] Reduced disk I/O operations in Instruments
-- [ ] Error logging for persistence failures
-- [ ] Graceful fallback to defaults on corruption
-- [ ] Settings still persist correctly
-
----
-
-### Fix 4: Improve Background State Handling
-**Impact**: Medium - Prevents unexpected timer resets  
-**Effort**: High (60 minutes)  
-**Files**: `BackgroundTaskService.swift`, `TimerService.swift`
-
-#### Current Issue
+### Step 2.1: Add deinit to BackgroundTaskService
+**File**: `FlowMode/Core/Services/BackgroundTaskService.swift`
+**Action**: Add after the `setupNotificationObservers()` method:
 ```swift
-// BackgroundTaskService.swift:77-82
-if backgroundDuration >= Double(remainingTime) {
-    timerService.resetTimer() // Resets without user knowledge
+deinit {
+    cancellables.removeAll()
+    endBackgroundTask()
 }
 ```
+**Test**: Use Instruments to verify BackgroundTaskService is properly deallocated
 
-#### Implementation Steps
-1. **Add background state tracking**:
+### Step 2.2: Fix weak self capture in TimerService
+**File**: `FlowMode/Core/Services/TimerService.swift`
+**Find**: Timer.scheduledTimer calls (multiple locations)
+**Replace each with weak self capture**:
 ```swift
-// Add to TimerService
+timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+    self?.updateElapsedTime()
+}
+```
+**Test**: Timer should still function correctly, verify no retain cycles in Instruments
+
+## Phase 3: Thread Safety Fixes
+
+### Step 3.1: Remove @MainActor from SubscriptionService class
+**File**: `FlowMode/Core/Services/SubscriptionService.swift`
+**Find**: Line with `@MainActor class SubscriptionService`
+**Replace with**: `class SubscriptionService: ObservableObject`
+**Test**: Build should succeed
+
+### Step 3.2: Add @MainActor to UI-updating methods
+**File**: `FlowMode/Core/Services/SubscriptionService.swift`
+**Find**: Methods that update @Published properties
+**Add** `@MainActor` to each method that updates UI:
+```swift
+@MainActor
+private func updateUIState() {
+    // existing code
+}
+```
+**Test**: UI updates should still work correctly
+
+### Step 3.3: Fix async MainActor calls
+**File**: `FlowMode/Core/Services/SubscriptionService.swift`
+**Find**: `await MainActor.run` blocks
+**Ensure** they only wrap UI updates, not business logic
+**Test**: Subscription flow should work without deadlocks
+
+## Phase 4: Gesture Conflict Resolution
+
+### Step 4.1: Create custom gesture modifier
+**File**: Create new file `FlowMode/Views/Timer/TimerGestureModifier.swift`
+**Add**:
+```swift
+import SwiftUI
+
+struct TimerGestureModifier: ViewModifier {
+    let onTap: () -> Void
+    let onDoubleTap: () -> Void
+    let onLongPress: () -> Void
+    
+    @State private var tapCount = 0
+    @State private var tapTimer: Timer?
+    
+    func body(content: Content) -> some View {
+        content
+            .onTapGesture {
+                handleTap()
+            }
+            .onLongPressGesture(minimumDuration: 1.0) {
+                tapTimer?.invalidate()
+                tapCount = 0
+                onLongPress()
+            }
+    }
+    
+    private func handleTap() {
+        tapCount += 1
+        
+        if tapCount == 1 {
+            tapTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) { _ in
+                if tapCount == 1 {
+                    onTap()
+                }
+                tapCount = 0
+            }
+        } else if tapCount == 2 {
+            tapTimer?.invalidate()
+            onDoubleTap()
+            tapCount = 0
+        }
+    }
+}
+```
+**Test**: File should compile
+
+### Step 4.2: Replace gesture handlers in TimerView
+**File**: `FlowMode/Views/Timer/TimerView.swift`
+**Find**: Lines with `.onTapGesture(count: 2)`, `.onTapGesture`, `.onLongPressGesture`
+**Replace with**:
+```swift
+.modifier(TimerGestureModifier(
+    onTap: handleTimerTap,
+    onDoubleTap: handleTimerDoubleTap,
+    onLongPress: handleTimerLongPress
+))
+```
+**Test**: All gestures should work without conflicts
+
+## Phase 5: Background State Improvements (Priority Fix 4)
+
+### Step 5.1: Add background interruption state
+**File**: `FlowMode/Core/Services/TimerService.swift`
+**Add** to properties:
+```swift
 @Published var wasInterruptedByBackground: Bool = false
 ```
+**Test**: Build should succeed
 
-2. **Modify background handling** in `BackgroundTaskService.swift`:
+### Step 5.2: Add background time adjustment method
+**File**: `FlowMode/Core/Services/TimerService.swift`
+**Add** new method:
 ```swift
-if backgroundDuration >= Double(remainingTime) {
-    timerService.wasInterruptedByBackground = true
-    timerService.pauseWorkTimer() // Pause instead of reset
-} else {
-    // Adjust timer for background time
-    timerService.adjustForBackgroundTime(backgroundDuration)
+func adjustForBackgroundTime(_ duration: TimeInterval) {
+    guard let startTime = startTime else { return }
+    self.startTime = startTime.addingTimeInterval(-duration)
 }
 ```
+**Test**: Method should compile
 
-3. **Add user notification for background interruption**:
+### Step 5.3: Update background handling logic
+**File**: `FlowMode/Core/Services/BackgroundTaskService.swift`
+**Find**: `updateTimerFromBackground()` method
+**Replace** the switch case for `.breaking`:
 ```swift
-// In TimerView, add alert for background interruption
+case .breaking:
+    let remainingTime = timerService.remainingPauseSeconds
+    if backgroundDuration >= Double(remainingTime) {
+        timerService.wasInterruptedByBackground = true
+        timerService.pauseBreakTimer()
+    } else {
+        timerService.adjustForBackgroundTime(backgroundDuration)
+    }
+```
+**Test**: Background handling should pause instead of reset
+
+### Step 5.4: Add interruption alert to TimerView
+**File**: `FlowMode/Views/Timer/TimerView.swift`
+**Add** after the `.sheet` modifier:
+```swift
 .alert("Timer Interrupted", isPresented: $timerService.wasInterruptedByBackground) {
-    Button("Continue") { 
-        timerService.resumeWorkTimer()
+    Button("Continue") {
+        timerService.resumeBreakTimer()
         timerService.wasInterruptedByBackground = false
     }
-    Button("Reset") { 
+    Button("Reset") {
         timerService.resetTimer()
         timerService.wasInterruptedByBackground = false
     }
 } message: {
-    Text("Your timer was paused due to extended background time. Would you like to continue or reset?")
+    Text("Your timer was paused due to extended background time.")
 }
 ```
+**Test**: Alert should appear when returning from extended background
 
-#### Testing Steps
-1. **Background Test**: Start timer, background app for extended period, return
-2. **User Experience Test**: Verify user is notified of interruption
-3. **Choice Test**: Verify both "Continue" and "Reset" options work
-4. **Edge Case Test**: Test rapid background/foreground transitions
+## Phase 6: Structured Logging (Priority Fix 5)
 
-#### Success Criteria
-- [ ] No unexpected timer resets
-- [ ] User notified of background interruptions
-- [ ] User can choose to continue or reset
-- [ ] Timer accuracy maintained for short backgrounds
-- [ ] Graceful handling of extended backgrounds
-
----
-
-## Priority 3: Quality of Life Improvements
-
-### Fix 5: Add Structured Logging Framework
-**Impact**: Low - Improves debugging and monitoring  
-**Effort**: Medium (45 minutes)  
-**Files**: New `Logger.swift`, Update all services
-
-#### Implementation Steps
-1. **Create logging service**:
+### Step 6.1: Create Logger utility
+**File**: Create new file `FlowMode/Core/Utilities/Logger.swift`
+**Add**:
 ```swift
-// Core/Services/Logger.swift
 import os.log
 
 enum LogLevel {
@@ -264,6 +254,7 @@ struct Logger {
     static let subscription = Logger(category: "Subscription")
     static let sound = Logger(category: "Sound")
     static let notification = Logger(category: "Notification")
+    static let background = Logger(category: "Background")
     
     private let osLog: OSLog
     
@@ -272,95 +263,126 @@ struct Logger {
     }
     
     func log(_ level: LogLevel, _ message: String) {
-        let type: OSLogType = switch level {
-        case .debug: .debug
-        case .info: .info
-        case .warning: .default
-        case .error: .error
+        let type: OSLogType
+        switch level {
+        case .debug: type = .debug
+        case .info: type = .info
+        case .warning: type = .default
+        case .error: type = .error
         }
-        os_log("%@", log: osLog, type: type, message)
+        os_log("%{public}@", log: osLog, type: type, message)
     }
 }
 ```
+**Test**: File should compile
 
-2. **Replace print statements** throughout codebase:
-```swift
-// Replace: print("Failed to schedule notification: \(error)")
-// With: Logger.notification.log(.error, "Failed to schedule notification: \(error)")
-```
+### Step 6.2: Replace prints in TimerService
+**File**: `FlowMode/Core/Services/TimerService.swift`
+**Find**: All `print` statements
+**Replace** each with appropriate Logger call:
+- `print("⚠️ Failed to save settings: \(error)")` → `Logger.timer.log(.error, "Failed to save settings: \(error)")`
+- `print("⚠️ Failed to load settings, using defaults: \(error)")` → `Logger.timer.log(.warning, "Failed to load settings: \(error)")`
+**Test**: Console.app should show structured logs
 
-3. **Add debug logging for key operations**:
+### Step 6.3: Add key operation logging to TimerService
+**File**: `FlowMode/Core/Services/TimerService.swift`
+**Add** at the start of each major method:
 ```swift
-// In TimerService
 func startWorkTimer() {
     Logger.timer.log(.info, "Starting work timer")
-    // ... existing implementation
+    // existing code
+}
+
+func pauseWorkTimer() {
+    Logger.timer.log(.info, "Pausing work timer")
+    // existing code
 }
 ```
+**Test**: Timer operations should log to Console.app
 
-#### Testing Steps
-1. **Console Verification**: Check Console.app shows structured logs
-2. **Level Testing**: Verify different log levels appear correctly
-3. **Performance Test**: Ensure logging doesn't impact app performance
-4. **Integration Test**: Run through full timer cycle, verify complete logging
+### Step 6.4: Replace prints in SoundService
+**File**: `FlowMode/Core/Services/SoundService.swift`
+**Find**: All `print` statements
+**Replace** with Logger calls
+**Test**: Sound operations should log to Console.app
 
-#### Success Criteria
-- [ ] Structured logging in Console.app
-- [ ] All print statements replaced
-- [ ] Debug builds show debug logs
-- [ ] Release builds show only warnings/errors
-- [ ] No performance impact from logging
+### Step 6.5: Replace prints in remaining services
+**Files**: `NotificationService.swift`, `SubscriptionService.swift`, `BackgroundTaskService.swift`
+**Action**: Replace all print statements with appropriate Logger calls
+**Test**: All services should use structured logging
 
----
+## Phase 7: Additional Critical Fixes
 
-## Implementation Timeline
+### Step 7.1: Add missing accessibility labels
+**File**: `FlowMode/Views/Timer/TimerDisplayView.swift`
+**Add** after the view body:
+```swift
+.accessibilityLabel("Timer showing \(TimeFormatter.formatSeconds(seconds))")
+.accessibilityHint(timerState == .idle ? "Double tap to start timer" : "Double tap to reset")
+.accessibilityAddTraits(.updatesFrequently)
+```
+**Test**: VoiceOver should read timer correctly
 
-### Week 1: Critical Fixes
-- **Day 1**: Fix 1 - Remove Double TimerService Creation
-- **Day 2**: Fix 2 - Add Sound File Validation
-- **Day 3**: Testing and validation of critical fixes
+### Step 7.2: Fix potential division by zero
+**File**: `FlowMode/Core/Services/TimerService.swift`
+**Find**: `progressPercentage` computed property
+**Add** safety check:
+```swift
+let maxSeconds = max(1, settings.maxWorkTimeMinutes * 60)
+```
+**Test**: Progress should never cause division by zero
 
-### Week 2: Performance Optimizations
-- **Day 1-2**: Fix 3 - Settings Persistence Debouncing
-- **Day 3-4**: Fix 4 - Background State Handling
-- **Day 5**: Testing and validation of performance fixes
+### Step 7.3: Add error recovery UI component
+**File**: Create new file `FlowMode/Views/Common/ErrorView.swift`
+**Add**:
+```swift
+import SwiftUI
 
-### Week 3: Quality Improvements
-- **Day 1-2**: Fix 5 - Structured Logging Framework
-- **Day 3-5**: Comprehensive testing and final validation
+struct ErrorView: View {
+    let title: String
+    let message: String
+    let retry: (() -> Void)?
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "exclamationmark.triangle")
+                .font(.largeTitle)
+                .foregroundColor(.red)
+            
+            Text(title)
+                .font(.headline)
+            
+            Text(message)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+            
+            if let retry = retry {
+                Button("Try Again", action: retry)
+                    .buttonStyle(.borderedProminent)
+            }
+        }
+        .padding()
+    }
+}
+```
+**Test**: Preview should show error view correctly
 
-## Testing Strategy
+## Testing Checkpoints
 
-### Automated Testing
-1. **Unit Tests**: Create tests for each fix
-2. **Integration Tests**: Test complete workflows
-3. **Performance Tests**: Measure before/after metrics
-
-### Manual Testing
-1. **Smoke Tests**: Basic functionality after each fix
-2. **Edge Case Testing**: Unusual scenarios and error conditions
-3. **User Experience Testing**: Verify no regression in UX
-
-### Validation Metrics
-1. **Memory Usage**: Measure with Instruments
-2. **Performance**: Timer accuracy and responsiveness
-3. **Stability**: Crash-free operation over extended use
-4. **User Experience**: No unexpected behavior changes
-
-## Rollback Plan
-
-Each fix should be implemented in separate commits with clear commit messages. If any fix causes issues:
-
-1. **Immediate**: Revert the specific commit
-2. **Investigate**: Use logging to understand the issue
-3. **Re-implement**: Address the root cause
-4. **Re-test**: Full validation before re-deployment
+After each phase:
+1. **Build Test**: App compiles without warnings
+2. **Functional Test**: Core timer functionality works
+3. **Memory Test**: Check for leaks with Instruments
+4. **Performance Test**: Verify no UI lag
+5. **Regression Test**: All existing features still work
 
 ## Success Metrics
 
-### Overall Success Criteria
-- [ ] All critical stability issues resolved
-- [ ] Performance improved by measurable metrics
-- [ ] No regression in existing functionality
-- [ ] Comprehensive test coverage for fixes
-- [ ] Documentation updated to reflect changes
+- [ ] All print statements replaced with structured logging
+- [ ] No memory leaks detected in Instruments
+- [ ] Settings save at most once per 500ms
+- [ ] Background interruptions handled gracefully
+- [ ] No gesture conflicts
+- [ ] Thread-safe operations
+- [ ] Improved error handling throughout
