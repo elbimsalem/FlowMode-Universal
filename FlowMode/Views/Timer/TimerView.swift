@@ -159,7 +159,9 @@ struct TimerView: View {
         let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
         impactFeedback.impactOccurred()
         #elseif os(macOS)
-        NSSound.beep()
+        if let soundName = timerService.settings.doubleTapFeedbackSound {
+            NSSound(named: soundName)?.play()
+        }
         #endif
         timerService.resetTimer()
     }
@@ -192,7 +194,9 @@ struct TimerView: View {
         let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
         impactFeedback.impactOccurred()
         #elseif os(macOS)
-        NSSound.beep()
+        if let soundName = timerService.settings.doubleTapFeedbackSound {
+            NSSound(named: soundName)?.play()
+        }
         #endif
         timerService.resetTimer()
     }

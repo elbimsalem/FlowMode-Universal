@@ -24,6 +24,11 @@ class BackgroundTaskService: ObservableObject {
         self.timerService = timerService
     }
     
+    deinit {
+        cancellables.removeAll()
+        endBackgroundTask()
+    }
+    
     private func setupNotificationObservers() {
         // Listen for app lifecycle changes
         NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)
@@ -72,17 +77,12 @@ class BackgroundTaskService: ObservableObject {
         // Update timer based on current state
         switch timerService.timerState {
         case .working:
-            // Timer was running when app went to background
-            // The timer should continue counting naturally when app returns
+            // Timer was running when app went to background, adjust for background time
+            timerService.adjustForBackgroundTime(backgroundDuration)
             break
         case .breaking:
-            // Break timer was running
-            // Check if break should have completed while in background
-            let remainingTime = timerService.remainingPauseSeconds
-            if backgroundDuration >= Double(remainingTime) {
-                // Break completed while in background
-                timerService.resetTimer()
-            }
+            // Break timer was running, adjust for background time to continue seamlessly
+            timerService.adjustForBackgroundTime(backgroundDuration)
             break
         default:
             break

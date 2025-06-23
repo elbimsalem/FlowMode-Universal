@@ -29,6 +29,10 @@ struct TimerSettingsView: View {
                         Toggle("Stacked Time Display", isOn: $timerService.settings.useStackedTimeDisplay)
                         
                         Toggle("Show Timer Controls", isOn: $timerService.settings.showTimerControls)
+                        
+                        #if os(macOS)
+                        DoubleTapSoundRow(selectedSound: $timerService.settings.doubleTapFeedbackSound)
+                        #endif
                     }
                     .padding(.leading, 8)
                 }

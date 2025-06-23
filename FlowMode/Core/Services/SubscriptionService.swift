@@ -9,7 +9,6 @@ import Foundation
 import StoreKit
 import Combine
 
-@MainActor
 class SubscriptionService: ObservableObject {
     static let shared = SubscriptionService()
     
@@ -37,6 +36,7 @@ class SubscriptionService: ObservableObject {
     
     // MARK: - Product Loading
     
+    @MainActor
     func loadProducts() async {
         guard availableProducts.isEmpty else { return }
         
@@ -48,17 +48,13 @@ class SubscriptionService: ObservableObject {
             
             let subscriptionProducts = products.map { SubscriptionProduct(product: $0) }
             
-            await MainActor.run {
-                self.availableProducts = subscriptionProducts
-                self.isLoading = false
-            }
+            self.availableProducts = subscriptionProducts
+            self.isLoading = false
         } catch {
-            await MainActor.run {
-                self.errorMessage = "Failed to load products: \(error.localizedDescription)"
-                self.isLoading = false
-                // Use mock product for development
-                self.availableProducts = [SubscriptionProduct.mockMonthlySubscription]
-            }
+            self.errorMessage = "Failed to load products: \(error.localizedDescription)"
+            self.isLoading = false
+            // Use mock product for development
+            self.availableProducts = [SubscriptionProduct.mockMonthlySubscription]
         }
     }
     
@@ -149,6 +145,7 @@ class SubscriptionService: ObservableObject {
     
     // MARK: - Subscription Status Management
     
+    @MainActor
     private func updateSubscriptionStatus() async {
         var hasActiveSubscription = false
         var latestExpirationDate: Date?
@@ -162,27 +159,26 @@ class SubscriptionService: ObservableObject {
                     latestExpirationDate = transaction.expirationDate
                 }
             } catch {
-                print("Failed to verify transaction: \(error)")
+                Logger.subscription.log(.error, "Failed to verify transaction: \(error)")
             }
         }
         
-        await MainActor.run {
-            if hasActiveSubscription {
-                self.subscriptionStatus = SubscriptionStatus(
-                    state: .active,
-                    trialStartDate: self.subscriptionStatus.trialStartDate,
-                    subscriptionStartDate: Date(),
-                    expirationDate: latestExpirationDate
-                )
-            } else {
-                // No active subscription, check trial status
-                self.updateTrialStatus()
-            }
-            
-            self.saveSubscriptionStatus()
+        if hasActiveSubscription {
+            self.subscriptionStatus = SubscriptionStatus(
+                state: .active,
+                trialStartDate: self.subscriptionStatus.trialStartDate,
+                subscriptionStartDate: Date(),
+                expirationDate: latestExpirationDate
+            )
+        } else {
+            // No active subscription, check trial status
+            self.updateTrialStatus()
         }
+        
+        self.saveSubscriptionStatus()
     }
     
+    @MainActor
     private func updateTrialStatus() {
         if subscriptionStatus.state == .trial && !subscriptionStatus.isTrialActive {
             subscriptionStatus = SubscriptionStatus(
@@ -204,7 +200,7 @@ class SubscriptionService: ObservableObject {
                     await updateSubscriptionStatus()
                     await transaction.finish()
                 } catch {
-                    print("Transaction verification failed: \(error)")
+                    Logger.subscription.log(.error, "Transaction verification failed: \(error)")
                 }
             }
         }

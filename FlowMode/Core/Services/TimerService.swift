@@ -24,6 +24,7 @@ class TimerService: ObservableObject {
         // Set up didSet behavior manually since we can't use it in the property declaration
         self.$settings
             .dropFirst() // Skip the initial value
+            .debounce(for: .milliseconds(500), scheduler: RunLoop.main)
             .sink { [weak self] _ in
                 self?.saveSettings()
             }
@@ -47,7 +48,7 @@ class TimerService: ObservableObject {
         switch timerState {
         case .working, .workPaused:
             if settings.maxWorkTimeEnabled {
-                let maxSeconds = settings.maxWorkTimeMinutes * 60
+                let maxSeconds = max(1, settings.maxWorkTimeMinutes * 60)
                 return CGFloat(elapsedSeconds) / CGFloat(maxSeconds)
             } else {
                 // No max time set, use 8 hours (28800 seconds) as reference
@@ -56,7 +57,7 @@ class TimerService: ObservableObject {
             }
         case .workCompleted, .breaking, .breakPaused:
             if remainingPauseSeconds > 0 {
-                let totalPauseSeconds = elapsedSeconds * settings.selectedPausePercentage / 100
+                let totalPauseSeconds = max(1, elapsedSeconds * settings.selectedPausePercentage / 100)
                 return CGFloat(remainingPauseSeconds) / CGFloat(totalPauseSeconds)
             }
             return 0.0
@@ -66,11 +67,12 @@ class TimerService: ObservableObject {
     }
     
     func startWorkTimer() {
+        Logger.timer.log(.info, "Starting work timer")
         timerState = .working
         startTime = Date()
         
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-            self.updateElapsedTime()
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            self?.updateElapsedTime()
         }
         
         // Schedule max work time notification if enabled
@@ -86,6 +88,7 @@ class TimerService: ObservableObject {
     }
     
     func pauseWorkTimer() {
+        Logger.timer.log(.info, "Pausing work timer")
         timerState = .workPaused
         timer?.invalidate()
         timer = nil
@@ -98,8 +101,8 @@ class TimerService: ObservableObject {
         timerState = .working
         startTime = Date().addingTimeInterval(-Double(elapsedSeconds))
         
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-            self.updateElapsedTime()
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            self?.updateElapsedTime()
         }
         
         // Reschedule max work time notification when resuming
@@ -268,17 +271,32 @@ class TimerService: ObservableObject {
         }
     }
     
+    // MARK: - Background Time Adjustment
+    
+    func adjustForBackgroundTime(_ duration: TimeInterval) {
+        guard let startTime = startTime else { return }
+        self.startTime = startTime.addingTimeInterval(-duration)
+    }
+    
     private static func loadSettings() -> TimerSettings {
-        if let data = UserDefaults.standard.data(forKey: "TimerSettings"),
-           let settings = try? JSONDecoder().decode(TimerSettings.self, from: data) {
-            return settings
+        guard let data = UserDefaults.standard.data(forKey: "TimerSettings") else {
+            return TimerSettings()
         }
-        return TimerSettings()
+        
+        do {
+            return try JSONDecoder().decode(TimerSettings.self, from: data)
+        } catch {
+            Logger.timer.log(.warning, "Failed to load settings: \(error)")
+            return TimerSettings()
+        }
     }
     
     private func saveSettings() {
-        if let data = try? JSONEncoder().encode(settings) {
+        do {
+            let data = try JSONEncoder().encode(settings)
             UserDefaults.standard.set(data, forKey: "TimerSettings")
+        } catch {
+            Logger.timer.log(.error, "Failed to save settings: \(error)")
         }
     }
 }

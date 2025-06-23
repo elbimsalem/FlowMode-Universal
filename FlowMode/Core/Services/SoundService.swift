@@ -201,7 +201,7 @@ class SoundService {
     private static func playRingtoneContinuous(named soundName: String) {
         // Validate continuous sound exists before proceeding
         guard validateContinuousSoundExists(soundName) else {
-            print("⚠️ Continuous sound file not found: \(soundName)")
+            Logger.sound.log(.warning, "Continuous sound file not found: \(soundName)")
             // Fallback to system alarm sound
             AudioServicesPlaySystemSound(1007)
             return
@@ -268,7 +268,7 @@ class SoundService {
                 audioPlayer?.play()
                 isPlayingContinuous = true
             } catch {
-                print("⚠️ Failed to play sound \(soundName): \(error)")
+                Logger.sound.log(.error, "Failed to play sound \(soundName): \(error)")
                 // Fallback to system sound if AVAudioPlayer fails
                 AudioServicesPlaySystemSound(1007) // Alarm sound
             }

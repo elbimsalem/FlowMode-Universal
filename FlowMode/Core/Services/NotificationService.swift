@@ -33,7 +33,7 @@ class NotificationService {
             #endif
             return granted
         } catch {
-            print("Notification authorization error: \(error)")
+            Logger.notification.log(.error, "Notification authorization error: \(error)")
             return false
         }
     }
@@ -51,7 +51,7 @@ class NotificationService {
             do {
                 try await UNUserNotificationCenter.current().add(request)
             } catch {
-                print("Failed to schedule notification: \(error)")
+                Logger.notification.log(.error, "Failed to schedule notification: \(error)")
             }
         }
     }
