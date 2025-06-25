@@ -19,4 +19,5 @@ struct TimerSettings: Codable {
     var useStackedTimeDisplay: Bool = true
     var showTimerControls: Bool = true
     var doubleTapFeedbackSound: String? = "Morse"
+    var selectedThemeId: String = "default"
 }

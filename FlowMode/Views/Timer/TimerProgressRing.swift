@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct TimerProgressRing: View {
+    @EnvironmentObject var themeService: ThemeService
     let progress: CGFloat
     let timerState: TimerState
     let pauseProgress: CGFloat
@@ -21,7 +22,7 @@ struct TimerProgressRing: View {
             // Outer pause time ring background
             if shouldShowPauseRing {
                 Circle()
-                    .stroke(Color.gray.opacity(0.1), lineWidth: strokeWidth)
+                    .stroke(themeService.currentTheme.ringBackgroundColor.color.opacity(0.1), lineWidth: strokeWidth)
                     .frame(width: outerRingSize, height: outerRingSize)
             }
             
@@ -29,7 +30,7 @@ struct TimerProgressRing: View {
             if shouldShowPauseRing {
                 Circle()
                     .trim(from: 0, to: pauseProgress)
-                    .stroke(Color.green.opacity(0.6), style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round))
+                    .stroke(themeService.currentTheme.secondaryRingColor.color.opacity(0.6), style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round))
                     .frame(width: outerRingSize, height: outerRingSize)
                     .rotationEffect(.degrees(-90))
                     .animation(.easeInOut(duration: 0.3), value: pauseProgress)
@@ -37,7 +38,7 @@ struct TimerProgressRing: View {
             
             // Inner work time ring background
             Circle()
-                .stroke(Color.gray.opacity(0.2), lineWidth: strokeWidth)
+                .stroke(themeService.currentTheme.ringBackgroundColor.color, lineWidth: strokeWidth)
                 .frame(width: ringSize, height: ringSize)
             
             // Inner work time progress ring
@@ -48,6 +49,7 @@ struct TimerProgressRing: View {
                 .rotationEffect(.degrees(-90))
                 .animation(.easeInOut(duration: 0.3), value: progress)
         }
+        .animation(.easeInOut(duration: 0.3), value: themeService.currentTheme.id)
     }
     
     private var shouldShowPauseRing: Bool {
@@ -57,11 +59,11 @@ struct TimerProgressRing: View {
     private var ringColor: Color {
         switch timerState {
         case .working, .workPaused:
-            return .blue
+            return themeService.currentTheme.primaryRingColor.color
         case .workCompleted, .breaking, .breakPaused:
-            return .green
+            return themeService.currentTheme.secondaryRingColor.color
         default:
-            return .gray
+            return themeService.currentTheme.ringBackgroundColor.color
         }
     }
 }

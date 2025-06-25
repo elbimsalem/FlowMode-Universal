@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct TimerDisplayView: View {
+    @EnvironmentObject var themeService: ThemeService
     let seconds: Int
     let timerState: TimerState
     let useStackedDisplay: Bool
@@ -54,9 +55,9 @@ struct TimerDisplayView: View {
     private var displayColor: Color {
         switch timerState {
         case .workCompleted, .breaking, .breakPaused:
-            return .green
+            return themeService.currentTheme.secondaryTextColor.color
         default:
-            return .primary
+            return themeService.currentTheme.primaryTextColor.color
         }
     }
 }

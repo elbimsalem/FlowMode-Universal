@@ -10,6 +10,7 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject var timerService: TimerService
     @EnvironmentObject var subscriptionService: SubscriptionService
+    @EnvironmentObject var themeService: ThemeService
     @Environment(\.dismiss) private var dismiss
     @State private var selectedCategory: SettingsCategory? = .timer
     
@@ -36,6 +37,8 @@ struct SettingsView: View {
                     switch selectedCategory {
                     case .timer:
                         TimerSettingsView()
+                    case .theme:
+                        ThemeSelectionView()
                     case .notifications:
                         NotificationSettingsView()
                     case .subscription:
@@ -73,6 +76,8 @@ struct SettingsView: View {
                     switch selectedCategory {
                     case .timer:
                         TimerSettingsView()
+                    case .theme:
+                        ThemeSelectionView()
                     case .notifications:
                         NotificationSettingsView()
                     case .subscription:

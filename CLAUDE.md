@@ -64,7 +64,7 @@ The core timer logic calculates break time as a percentage of work time:
 - Premium feature gating throughout the app
 
 ### Feature Gating
-Premium features are controlled via `SubscriptionService.subscriptionStatus.hasActiveAccess` and include unlimited sessions, custom sounds, and advanced notifications.
+Premium features are controlled via `SubscriptionService.subscriptionStatus.hasActiveAccess` and include unlimited sessions, custom sounds, advanced notifications, and premium themes.
 
 ## Platform-Specific Considerations
 
@@ -129,7 +129,30 @@ Subscription errors are user-facing with specific error types. Settings persiste
 
 The app is production-ready with complete timer functionality, subscription system, cross-platform support, and premium feature gating. Latest enhancements include:
 
-### Visual Timer Feedback (Latest Update)
+### Premium Theme System (Latest Update)
+**Key Features Added:**
+- **5 Beautiful Themes**: Classic (free), Midnight, Forest, Sunset, and Ocean (premium)
+- **Visual Customization**: Ring colors, text colors, backgrounds, gradients, and glow effects
+- **Premium Gating**: Platform-specific paywall integration (sheet on iOS/macOS)
+- **Automatic Fallback**: Switches to Classic theme when subscription expires
+- **Cross-Platform UI**: Grid layout on macOS, list on iOS with consistent theme cards
+- **Dark Mode Support**: Classic theme uses semantic colors for automatic adaptation
+
+**Technical Implementation:**
+- Theme model with CodableColor for cross-platform color encoding
+- ThemeService with Combine-based subscription status monitoring
+- ThemeProvider with static theme definitions and validation
+- Platform-specific paywall presentation matching timer behavior
+- Smooth 0.3-second animations for theme transitions
+- Robust persistence with fallback validation
+
+**File Locations:**
+- Core models: `FlowMode/Core/Models/Theme.swift`, `CodableColor.swift`
+- Service layer: `FlowMode/Core/Services/ThemeService.swift`, `ThemeProvider.swift`
+- UI components: `FlowMode/Views/Settings/ThemeSelectionView.swift`, `ThemeCard.swift`, `ThemePreview.swift`
+- Utilities: `FlowMode/Core/Utilities/Color+Extensions.swift`, `View+Extensions.swift`
+
+### Visual Timer Feedback
 **Key Features Added:**
 - **Timer Dimming**: Timer circle dims to 50% opacity when idle or work paused
 - **Smooth Animations**: 0.3-second easing animation for visual state changes

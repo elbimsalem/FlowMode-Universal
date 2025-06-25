@@ -10,11 +10,30 @@ import SwiftUI
 struct TimerView: View {
     @EnvironmentObject var timerService: TimerService
     @EnvironmentObject var subscriptionService: SubscriptionService
+    @EnvironmentObject var themeService: ThemeService
     @State private var showingPaywall = false
     @State private var isPressed = false
     
     var body: some View {
-        VStack(spacing: 40) {
+        ZStack {
+            // Background
+            if themeService.currentTheme.useGradientBackground,
+               let gradientEnd = themeService.currentTheme.gradientEndColor {
+                LinearGradient(
+                    colors: [
+                        themeService.currentTheme.backgroundColor.color,
+                        gradientEnd.color
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .ignoresSafeArea()
+            } else {
+                themeService.currentTheme.backgroundColor.color
+                    .ignoresSafeArea()
+            }
+            
+            VStack(spacing: 40) {
             VStack(spacing: 16) {
                 ZStack {
                     TimerProgressRing(
@@ -30,6 +49,12 @@ struct TimerView: View {
                     )
                 }
                 .frame(width: 250, height: 250)
+                .if(themeService.currentTheme.glowEffect) { view in
+                    view.shadow(
+                        color: themeService.currentTheme.glowColor?.color ?? .clear,
+                        radius: themeService.currentTheme.glowRadius
+                    )
+                }
                 .contentShape(Circle())
                 .scaleEffect(isPressed ? 0.95 : 1.0)
                 .opacity(timerService.timerState == .workPaused || timerService.timerState == .idle ? 0.5 : 1.0)
@@ -88,7 +113,9 @@ struct TimerView: View {
                     isEnabled: subscriptionService.subscriptionStatus.hasActiveAccess
                 )
             }
+            }
         }
+        .animation(.easeInOut(duration: 0.3), value: themeService.currentTheme.id)
         .sheet(isPresented: $showingPaywall) {
             TimerPaywallView()
                 .environmentObject(subscriptionService)

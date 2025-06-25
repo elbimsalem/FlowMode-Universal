@@ -11,6 +11,7 @@ import SwiftUI
 struct FlowModeApp: App {
     @StateObject private var timerService = TimerService()
     @StateObject private var subscriptionService = SubscriptionService.shared
+    @StateObject private var themeService: ThemeService
     #if os(iOS)
     @StateObject private var backgroundTaskService = BackgroundTaskService()
     #endif
@@ -19,6 +20,11 @@ struct FlowModeApp: App {
         // Initialize services
         _ = NotificationService.shared
         _ = SubscriptionService.shared
+        
+        let timer = TimerService()
+        let subscription = SubscriptionService.shared
+        _timerService = StateObject(wrappedValue: timer)
+        _themeService = StateObject(wrappedValue: ThemeService(timerService: timer, subscriptionService: subscription))
     }
     
     var body: some Scene {
@@ -26,6 +32,7 @@ struct FlowModeApp: App {
             MainView()
                 .environmentObject(timerService)
                 .environmentObject(subscriptionService)
+                .environmentObject(themeService)
                 #if os(iOS)
                 .environmentObject(backgroundTaskService)
                 #endif
@@ -41,6 +48,7 @@ struct FlowModeApp: App {
             SettingsView()
                 .environmentObject(timerService)
                 .environmentObject(subscriptionService)
+                .environmentObject(themeService)
         }
         .windowResizability(.contentMinSize)
         #endif

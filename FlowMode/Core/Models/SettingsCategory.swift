@@ -9,6 +9,7 @@ import SwiftUI
 
 enum SettingsCategory: String, CaseIterable, Identifiable {
     case timer = "Timer"
+    case theme = "Theme"
     case notifications = "Notifications"
     case subscription = "Subscription"
     case about = "About"
@@ -19,6 +20,8 @@ enum SettingsCategory: String, CaseIterable, Identifiable {
         switch self {
         case .timer:
             return "timer"
+        case .theme:
+            return "paintbrush.fill"
         case .notifications:
             return "bell"
         case .subscription:
@@ -32,6 +35,8 @@ enum SettingsCategory: String, CaseIterable, Identifiable {
         switch self {
         case .timer:
             return "Timer settings and preferences"
+        case .theme:
+            return "Customize timer appearance"
         case .notifications:
             return "Notification and sound settings"
         case .subscription:
