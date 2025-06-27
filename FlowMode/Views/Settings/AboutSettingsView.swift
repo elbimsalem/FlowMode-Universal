@@ -9,6 +9,7 @@ import SwiftUI
 
 struct AboutSettingsView: View {
     @EnvironmentObject var subscriptionService: SubscriptionService
+    @EnvironmentObject var themeService: ThemeService
     
     var body: some View {
         ScrollView {
@@ -17,69 +18,31 @@ struct AboutSettingsView: View {
                     Text("About FlowMode")
                         .font(.title2)
                         .fontWeight(.semibold)
+                        .foregroundColor(themeService.currentTheme.primaryTextColor.color)
                     
                     VStack(alignment: .leading, spacing: 12) {
                         Text("FlowMode is a productivity timer app that implements the Flowmodoro technique.")
-                            .foregroundColor(.secondary)
+                            .foregroundColor(themeService.currentTheme.secondaryTextColor.color)
                         
                         Divider()
                         
                         HStack {
                             Text("Version")
+                                .foregroundColor(themeService.currentTheme.primaryTextColor.color)
                             Spacer()
                             Text("1.0.0")
-                                .foregroundColor(.secondary)
+                                .foregroundColor(themeService.currentTheme.secondaryTextColor.color)
                         }
                         
                         HStack {
                             Text("Build")
+                                .foregroundColor(themeService.currentTheme.primaryTextColor.color)
                             Spacer()
-                            Text("2")
-                                .foregroundColor(.secondary)
+                            Text("6")
+                                .foregroundColor(themeService.currentTheme.secondaryTextColor.color)
                         }
                         
                         Divider()
-                        
-                        #if DEBUG
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Debug Controls")
-                                .font(.headline)
-                            
-                            Button("Reset Trial to 7 Days") {
-                                let newStatus = SubscriptionStatus(
-                                    state: .trial,
-                                    trialStartDate: Date(),
-                                    subscriptionStartDate: nil,
-                                    expirationDate: nil
-                                )
-                                subscriptionService.subscriptionStatus = newStatus
-                            }
-                            .buttonStyle(.bordered)
-                            
-                            Button("End Trial") {
-                                let pastDate = Calendar.current.date(byAdding: .day, value: -8, to: Date()) ?? Date()
-                                let newStatus = SubscriptionStatus(
-                                    state: .expired,
-                                    trialStartDate: pastDate,
-                                    subscriptionStartDate: nil,
-                                    expirationDate: nil
-                                )
-                                subscriptionService.subscriptionStatus = newStatus
-                            }
-                            .buttonStyle(.bordered)
-                            
-                            Button("Reset to Not Started") {
-                                let newStatus = SubscriptionStatus(
-                                    state: .notStarted,
-                                    trialStartDate: nil,
-                                    subscriptionStartDate: nil,
-                                    expirationDate: nil
-                                )
-                                subscriptionService.subscriptionStatus = newStatus
-                            }
-                            .buttonStyle(.bordered)
-                        }
-                        #endif
                     }
                     .padding(.leading, 8)
                 }
@@ -88,6 +51,8 @@ struct AboutSettingsView: View {
             }
             .padding(24)
         }
+        .scrollContentBackground(.hidden)
+        .themedBackground(themeService.currentTheme)
         .navigationTitle("About")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.large)

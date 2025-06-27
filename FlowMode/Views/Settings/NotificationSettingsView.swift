@@ -10,6 +10,7 @@ import UserNotifications
 
 struct NotificationSettingsView: View {
     @EnvironmentObject var timerService: TimerService
+    @EnvironmentObject var themeService: ThemeService
     @State private var authorizationStatus: UNAuthorizationStatus = .notDetermined
     
     var body: some View {
@@ -19,6 +20,7 @@ struct NotificationSettingsView: View {
                     Text("Notification Settings")
                         .font(.title2)
                         .fontWeight(.semibold)
+                        .foregroundColor(themeService.currentTheme.primaryTextColor.color)
                     
                     VStack(alignment: .leading, spacing: 12) {
                         if authorizationStatus == .denied {
@@ -119,6 +121,8 @@ struct NotificationSettingsView: View {
             }
             .padding(24)
         }
+        .scrollContentBackground(.hidden)
+        .themedBackground(themeService.currentTheme)
         .navigationTitle("Notifications")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.large)

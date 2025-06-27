@@ -15,17 +15,39 @@ struct SettingsView: View {
     @State private var selectedCategory: SettingsCategory? = .timer
     
     var body: some View {
-        #if os(macOS)
-        NavigationSplitView(columnVisibility: .constant(.all)) {
-            // Sidebar
-            List(selection: $selectedCategory) {
-                Section("Settings") {
+        Group {
+            #if os(macOS)
+            NavigationSplitView(columnVisibility: .constant(.all)) {
+            // Sidebar with theme background
+            ZStack {
+                // Theme background for sidebar
+                if themeService.currentTheme.useGradientBackground,
+                   let gradientEnd = themeService.currentTheme.gradientEndColor {
+                    LinearGradient(
+                        colors: [
+                            themeService.currentTheme.backgroundColor.color,
+                            gradientEnd.color
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .ignoresSafeArea()
+                } else {
+                    themeService.currentTheme.backgroundColor.color
+                        .ignoresSafeArea()
+                }
+                
+                List(selection: $selectedCategory) {
                     ForEach(SettingsCategory.allCases) { category in
                         NavigationLink(value: category) {
                             Label(category.rawValue, systemImage: category.icon)
+                                .foregroundColor(themeService.currentTheme.primaryTextColor.color)
                         }
+                        .listRowBackground(Color.clear)
                     }
                 }
+                .scrollContentBackground(.hidden)
+                .background(Color.clear)
             }
             .navigationTitle("Settings")
             .navigationSplitViewColumnWidth(min: 200, ideal: 250)
@@ -45,6 +67,10 @@ struct SettingsView: View {
                         SubscriptionView()
                     case .about:
                         AboutSettingsView()
+                    #if DEBUG
+                    case .debug:
+                        DebugSettingsView()
+                    #endif
                     }
                 } else {
                     ContentUnavailableView(
@@ -58,15 +84,36 @@ struct SettingsView: View {
         }
         #else
         NavigationSplitView {
-            // Sidebar
-            List(selection: $selectedCategory) {
-                Section("Settings") {
+            // Sidebar with theme background
+            ZStack {
+                // Theme background for sidebar
+                if themeService.currentTheme.useGradientBackground,
+                   let gradientEnd = themeService.currentTheme.gradientEndColor {
+                    LinearGradient(
+                        colors: [
+                            themeService.currentTheme.backgroundColor.color,
+                            gradientEnd.color
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .ignoresSafeArea()
+                } else {
+                    themeService.currentTheme.backgroundColor.color
+                        .ignoresSafeArea()
+                }
+                
+                List(selection: $selectedCategory) {
                     ForEach(SettingsCategory.allCases) { category in
                         NavigationLink(value: category) {
                             Label(category.rawValue, systemImage: category.icon)
+                                .foregroundColor(themeService.currentTheme.primaryTextColor.color)
                         }
+                        .listRowBackground(Color.clear)
                     }
                 }
+                .scrollContentBackground(.hidden)
+                .background(Color.clear)
             }
             .navigationTitle("Settings")
         } detail: {
@@ -84,6 +131,10 @@ struct SettingsView: View {
                         SubscriptionView()
                     case .about:
                         AboutSettingsView()
+                    #if DEBUG
+                    case .debug:
+                        DebugSettingsView()
+                    #endif
                     }
                 } else {
                     ContentUnavailableView(
@@ -95,5 +146,8 @@ struct SettingsView: View {
             }
         }
         #endif
+        }
+        .themedBackground(themeService.currentTheme)
+        .animation(.easeInOut(duration: 0.3), value: themeService.currentTheme.id)
     }
 }

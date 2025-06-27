@@ -18,7 +18,7 @@ struct ThemeProvider {
             ringBackgroundColor: CodableColor(color: .secondary.opacity(0.3)),
             primaryTextColor: CodableColor(color: .primary),
             secondaryTextColor: CodableColor(color: .secondary),
-            backgroundColor: CodableColor(color: Color(.systemBackground)),
+            backgroundColor: CodableColor(color: systemBackground),
             useGradientBackground: false,
             gradientEndColor: nil,
             glowEffect: false,
@@ -93,5 +93,13 @@ struct ThemeProvider {
     
     static func theme(withId id: String) -> Theme {
         defaultThemes.first { $0.id == id } ?? defaultThemes[0]
+    }
+    
+    private static var systemBackground: Color {
+        #if os(iOS)
+        return Color(.systemBackground)
+        #else
+        return Color(.windowBackgroundColor)
+        #endif
     }
 }

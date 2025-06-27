@@ -9,6 +9,7 @@ import SwiftUI
 
 struct TimerSettingsView: View {
     @EnvironmentObject var timerService: TimerService
+    @EnvironmentObject var themeService: ThemeService
     
     var body: some View {
         ScrollView {
@@ -17,6 +18,7 @@ struct TimerSettingsView: View {
                     Text("Timer Settings")
                         .font(.title2)
                         .fontWeight(.semibold)
+                        .foregroundColor(themeService.currentTheme.primaryTextColor.color)
                     
                     VStack(alignment: .leading, spacing: 12) {
                         PausePercentageRow(selectedPercentage: $timerService.settings.selectedPausePercentage)
@@ -41,6 +43,8 @@ struct TimerSettingsView: View {
             }
             .padding(24)
         }
+        .scrollContentBackground(.hidden)
+        .themedBackground(themeService.currentTheme)
         .navigationTitle("Timer")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.large)

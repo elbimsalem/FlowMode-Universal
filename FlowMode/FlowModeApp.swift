@@ -42,6 +42,10 @@ struct FlowModeApp: App {
                     #endif
                 }
         }
+        #if os(macOS)
+        .windowStyle(.hiddenTitleBar)
+        .windowResizability(.contentSize)
+        #endif
         
         #if os(macOS)
         Settings {

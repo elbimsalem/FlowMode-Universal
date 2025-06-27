@@ -13,6 +13,9 @@ struct TimerView: View {
     @EnvironmentObject var themeService: ThemeService
     @State private var showingPaywall = false
     @State private var isPressed = false
+    #if os(macOS)
+    @Environment(\.openSettings) private var openSettings
+    #endif
     
     var body: some View {
         ZStack {
@@ -114,6 +117,29 @@ struct TimerView: View {
                 )
             }
             }
+            
+            #if os(macOS)
+            // Settings button overlay - positioned independently
+            VStack {
+                Spacer()
+                
+                Button(action: {
+                    openSettings()
+                }) {
+                    Image(systemName: "gearshape.fill")
+                        .font(.title2)
+                        .foregroundColor(themeService.currentTheme.secondaryTextColor.color)
+                        .opacity(0.7)
+                }
+                .buttonStyle(.plain)
+                .padding(.bottom, 40)
+                .onHover { hovering in
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        // Could add hover effect here if desired
+                    }
+                }
+            }
+            #endif
         }
         .animation(.easeInOut(duration: 0.3), value: themeService.currentTheme.id)
         .sheet(isPresented: $showingPaywall) {

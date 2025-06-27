@@ -13,6 +13,9 @@ enum SettingsCategory: String, CaseIterable, Identifiable {
     case notifications = "Notifications"
     case subscription = "Subscription"
     case about = "About"
+    #if DEBUG
+    case debug = "Debug"
+    #endif
     
     var id: String { rawValue }
     
@@ -28,6 +31,10 @@ enum SettingsCategory: String, CaseIterable, Identifiable {
             return "crown"
         case .about:
             return "info.circle"
+        #if DEBUG
+        case .debug:
+            return "ladybug"
+        #endif
         }
     }
     
@@ -43,6 +50,10 @@ enum SettingsCategory: String, CaseIterable, Identifiable {
             return "Premium features and subscription"
         case .about:
             return "App information and support"
+        #if DEBUG
+        case .debug:
+            return "Developer debug controls"
+        #endif
         }
     }
 }

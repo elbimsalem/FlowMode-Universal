@@ -192,3 +192,6 @@ The app is production-ready with complete timer functionality, subscription syst
 ### Testing Protocol
 - **Manual Testing**: User handles manual testing of builds and functionality
 - **Build Verification**: User responsibility for build verification and device testing
+
+### Development Memory
+- **i test and build**: General task of verifying application functionality and preparing builds for testing and distribution
