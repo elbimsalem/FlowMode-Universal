@@ -129,7 +129,7 @@ Subscription errors are user-facing with specific error types. Settings persiste
 
 The app is production-ready with complete timer functionality, subscription system, cross-platform support, and premium feature gating. Latest enhancements include:
 
-### Premium Theme System (Latest Update)
+### Premium Theme System & Settings Integration (Latest Update)
 **Key Features Added:**
 - **5 Beautiful Themes**: Classic (free), Midnight, Forest, Sunset, and Ocean (premium)
 - **Visual Customization**: Ring colors, text colors, backgrounds, gradients, and glow effects
@@ -137,6 +137,9 @@ The app is production-ready with complete timer functionality, subscription syst
 - **Automatic Fallback**: Switches to Classic theme when subscription expires
 - **Cross-Platform UI**: Grid layout on macOS, list on iOS with consistent theme cards
 - **Dark Mode Support**: Classic theme uses semantic colors for automatic adaptation
+- **Comprehensive Settings Theming**: All settings views now use theme-aware backgrounds
+- **Debug Controls**: Dedicated debug settings page with comprehensive subscription testing
+- **macOS Native Integration**: Borderless window with native settings access
 
 **Technical Implementation:**
 - Theme model with CodableColor for cross-platform color encoding
@@ -145,12 +148,15 @@ The app is production-ready with complete timer functionality, subscription syst
 - Platform-specific paywall presentation matching timer behavior
 - Smooth 0.3-second animations for theme transitions
 - Robust persistence with fallback validation
+- `themedBackground()` view modifier for consistent theme application
+- Cross-platform background color compatibility fixes
 
 **File Locations:**
-- Core models: `FlowMode/Core/Models/Theme.swift`, `CodableColor.swift`
+- Core models: `FlowMode/Core/Models/Theme.swift`, `CodableColor.swift`, `SettingsCategory.swift`
 - Service layer: `FlowMode/Core/Services/ThemeService.swift`, `ThemeProvider.swift`
-- UI components: `FlowMode/Views/Settings/ThemeSelectionView.swift`, `ThemeCard.swift`, `ThemePreview.swift`
+- UI components: `FlowMode/Views/Settings/ThemeSelectionView.swift`, `ThemeCard.swift`, `ThemePreview.swift`, `DebugSettingsView.swift`
 - Utilities: `FlowMode/Core/Utilities/Color+Extensions.swift`, `View+Extensions.swift`
+- Enhanced views: `FlowMode/Views/Settings/SettingsView.swift`, `AboutSettingsView.swift`, `SubscriptionView.swift`
 
 ### Visual Timer Feedback
 **Key Features Added:**
@@ -161,15 +167,17 @@ The app is production-ready with complete timer functionality, subscription syst
 ### NavigationSplitView Settings Interface
 **Key Features Added:**
 - **macOS**: Dedicated Settings window with Cmd+, support, resizable interface, and always-visible sidebar
-- **iOS**: NavigationSplitView-based settings with organized categories (Timer, Notifications, Subscription, About)
+- **iOS**: NavigationSplitView-based settings with organized categories (Timer, Theme, Notifications, Subscription, About, Debug)
 - **Cross-Platform**: Consistent feature set with platform-appropriate UI patterns
-- **Clean Interface**: Removed unnecessary toolbar buttons for streamlined experience
+- **Clean Interface**: Streamlined design with theme-aware backgrounds throughout
+- **Native macOS Window**: Borderless title bar with seamless theme integration
 
 **Technical Implementation:**
 - Created SettingsCategory enum for type-safe navigation
-- Implemented modular setting views: TimerSettingsView, NotificationSettingsView, AboutSettingsView
+- Implemented modular setting views: TimerSettingsView, NotificationSettingsView, AboutSettingsView, DebugSettingsView
 - Enhanced cross-platform Settings scene with proper window configuration
-- Maintained existing subscription functionality and debug controls
+- Theme-aware sidebar and detail views with consistent visual design
+- Native macOS settings integration via Environment openSettings
 
 **Previous Enhancements:**
 - Interactive timer controls with cross-platform gesture support (tap, double-tap, long-press)
