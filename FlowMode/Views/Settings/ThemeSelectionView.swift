@@ -34,7 +34,8 @@ struct ThemeSelectionView: View {
                     ThemeCard(
                         theme: theme,
                         isSelected: theme.id == themeService.currentTheme.id,
-                        isLocked: !themeService.canSelectTheme(theme, subscriptionStatus: subscriptionService.subscriptionStatus)
+                        isLocked: !themeService.canSelectTheme(theme, subscriptionStatus: subscriptionService.subscriptionStatus),
+                        currentTheme: themeService.currentTheme
                     ) {
                         handleThemeSelection(theme)
                     }
@@ -50,12 +51,10 @@ struct ThemeSelectionView: View {
                 ThemeCard(
                     theme: theme,
                     isSelected: theme.id == themeService.currentTheme.id,
-                    isLocked: !themeService.canSelectTheme(theme, subscriptionStatus: subscriptionService.subscriptionStatus)
+                    isLocked: !themeService.canSelectTheme(theme, subscriptionStatus: subscriptionService.subscriptionStatus),
+                    currentTheme: themeService.currentTheme
                 ) {
                     handleThemeSelection(theme)
-                    if themeService.canSelectTheme(theme, subscriptionStatus: subscriptionService.subscriptionStatus) {
-                        dismiss()
-                    }
                 }
                 .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
                 .listRowBackground(Color.clear)

@@ -11,6 +11,7 @@ struct ThemeCard: View {
     let theme: Theme
     let isSelected: Bool
     let isLocked: Bool
+    let currentTheme: Theme
     let action: () -> Void
     
     var body: some View {
@@ -23,12 +24,6 @@ struct ThemeCard: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(theme.name)
                         .font(.headline)
-                    
-                    if theme.isPremium {
-                        Label("Premium", systemImage: "crown.fill")
-                            .font(.caption)
-                            .foregroundColor(.orange)
-                    }
                 }
                 
                 Spacer()
@@ -36,7 +31,7 @@ struct ThemeCard: View {
                 // Selection indicator
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.accentColor)
+                        .foregroundColor(currentTheme.primaryRingColor.color)
                         .font(.title2)
                 } else if isLocked {
                     Image(systemName: "lock.fill")
@@ -54,7 +49,7 @@ struct ThemeCard: View {
                     .fill(backgroundColorForPlatform)
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
-                            .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
+                            .stroke(isSelected ? currentTheme.primaryRingColor.color : Color.clear, lineWidth: 2)
                     )
             )
         }

@@ -12,7 +12,7 @@ struct SettingsView: View {
     @EnvironmentObject var subscriptionService: SubscriptionService
     @EnvironmentObject var themeService: ThemeService
     @Environment(\.dismiss) private var dismiss
-    @State private var selectedCategory: SettingsCategory? = .timer
+    @State private var selectedCategory: SettingsCategory? = nil
     
     var body: some View {
         Group {
@@ -116,6 +116,17 @@ struct SettingsView: View {
                 .background(Color.clear)
             }
             .navigationTitle("Settings")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(themeService.currentTheme.primaryRingColor.color)
+                    }
+                }
+            }
         } detail: {
             // Detail view
             Group {
@@ -144,6 +155,17 @@ struct SettingsView: View {
                     )
                 }
             }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(themeService.currentTheme.primaryRingColor.color)
+                    }
+                }
+            }
         }
         #endif
         }
@@ -151,3 +173,4 @@ struct SettingsView: View {
         .animation(.easeInOut(duration: 0.3), value: themeService.currentTheme.id)
     }
 }
+
