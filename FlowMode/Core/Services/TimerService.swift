@@ -44,6 +44,85 @@ class TimerService: ObservableObject {
         }
     }
     
+    // MARK: - 60-Minute Ring System
+    
+    private static let minutesPerRing: Int = 60
+    private static let secondsPerRing: Int = minutesPerRing * 60
+    
+    var workRingCount: Int {
+        switch timerState {
+        case .working, .workPaused, .workCompleted, .breaking, .breakPaused:
+            // Show rings for elapsed time
+            let elapsedRings = (elapsedSeconds / Self.secondsPerRing) + 1
+            
+            // Also show rings for max work time if enabled
+            var maxWorkTimeRings = 1
+            if settings.maxWorkTimeEnabled {
+                let maxWorkTimeSeconds = settings.maxWorkTimeMinutes * 60
+                maxWorkTimeRings = (maxWorkTimeSeconds + Self.secondsPerRing - 1) / Self.secondsPerRing // Ceiling division
+            }
+            
+            // Show the maximum of both requirements
+            return max(1, max(elapsedRings, maxWorkTimeRings))
+        default:
+            // Even when idle, show rings for max work time if enabled
+            if settings.maxWorkTimeEnabled {
+                let maxWorkTimeSeconds = settings.maxWorkTimeMinutes * 60
+                return max(1, (maxWorkTimeSeconds + Self.secondsPerRing - 1) / Self.secondsPerRing)
+            }
+            return 1
+        }
+    }
+    
+    var workRingProgress: CGFloat {
+        switch timerState {
+        case .working, .workPaused:
+            let progressInCurrentRing = elapsedSeconds % Self.secondsPerRing
+            return CGFloat(progressInCurrentRing) / CGFloat(Self.secondsPerRing)
+        case .workCompleted, .breaking, .breakPaused:
+            return 1.0 // Show completed ring
+        default:
+            return 0.0
+        }
+    }
+    
+    var pauseRingCount: Int {
+        switch timerState {
+        case .breaking, .breakPaused:
+            let totalBreakSeconds = elapsedSeconds * settings.selectedPausePercentage / 100
+            return max(1, (totalBreakSeconds / Self.secondsPerRing) + 1)
+        default:
+            let earnedBreakSeconds = elapsedSeconds * settings.selectedPausePercentage / 100
+            // Always show at least 1 ring to display earned break time, add more for each 60min earned
+            return max(1, (earnedBreakSeconds / Self.secondsPerRing) + 1)
+        }
+    }
+    
+    var pauseRingProgress: CGFloat {
+        switch timerState {
+        case .breaking, .breakPaused:
+            if remainingPauseSeconds > 0 {
+                let totalBreakSeconds = elapsedSeconds * settings.selectedPausePercentage / 100
+                let elapsedBreakSeconds = totalBreakSeconds - remainingPauseSeconds
+                let progressInCurrentRing = elapsedBreakSeconds % Self.secondsPerRing
+                return CGFloat(progressInCurrentRing) / CGFloat(Self.secondsPerRing)
+            }
+            return 0.0
+        default:
+            let earnedBreakSeconds = elapsedSeconds * settings.selectedPausePercentage / 100
+            let progressInCurrentRing = earnedBreakSeconds % Self.secondsPerRing
+            return CGFloat(progressInCurrentRing) / CGFloat(Self.secondsPerRing)
+        }
+    }
+    
+    var maxWorkTimeRingProgress: CGFloat? {
+        guard settings.maxWorkTimeEnabled else { return nil }
+        let maxWorkTimeSeconds = settings.maxWorkTimeMinutes * 60
+        let progressInCurrentRing = maxWorkTimeSeconds % Self.secondsPerRing
+        // If exactly on a ring boundary (like 120min), show full ring
+        return progressInCurrentRing == 0 ? 1.0 : CGFloat(progressInCurrentRing) / CGFloat(Self.secondsPerRing)
+    }
+    
     var progressPercentage: CGFloat {
         switch timerState {
         case .working, .workPaused:
