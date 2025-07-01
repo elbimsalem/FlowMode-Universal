@@ -12,6 +12,7 @@ struct TimerView: View {
     @EnvironmentObject var subscriptionService: SubscriptionService
     @EnvironmentObject var themeService: ThemeService
     @State private var showingPaywall = false
+    @State private var showingSettings = false
     @State private var isPressed = false
     #if os(macOS)
     @Environment(\.openSettings) private var openSettings
@@ -118,13 +119,16 @@ struct TimerView: View {
             }
             }
             
-            #if os(macOS)
             // Settings button overlay - positioned independently
             VStack {
                 Spacer()
                 
                 Button(action: {
+                    #if os(macOS)
                     openSettings()
+                    #else
+                    showingSettings = true
+                    #endif
                 }) {
                     Image(systemName: "gearshape.fill")
                         .font(.title2)
@@ -133,19 +137,28 @@ struct TimerView: View {
                 }
                 .buttonStyle(.plain)
                 .padding(.bottom, 40)
+                #if os(macOS)
                 .onHover { hovering in
                     withAnimation(.easeInOut(duration: 0.2)) {
                         // Could add hover effect here if desired
                     }
                 }
+                #endif
             }
-            #endif
         }
         .animation(.easeInOut(duration: 0.3), value: themeService.currentTheme.id)
         .sheet(isPresented: $showingPaywall) {
             TimerPaywallView()
                 .environmentObject(subscriptionService)
         }
+        #if os(iOS)
+        .sheet(isPresented: $showingSettings) {
+            SettingsView()
+                .environmentObject(timerService)
+                .environmentObject(subscriptionService)
+                .environmentObject(themeService)
+        }
+        #endif
         #if os(macOS)
         .background(
             Button("") {
