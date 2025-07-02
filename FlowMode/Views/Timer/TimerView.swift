@@ -14,6 +14,13 @@ struct TimerView: View {
     @State private var showingPaywall = false
     @State private var showingSettings = false
     @State private var isPressed = false
+    @State private var isAdjustingPausePercentage = false
+    @State private var isAdjustingMaxWorkTime = false
+    @State private var lastDragValue: CGFloat = 0
+    @State private var accumulatedPauseChange: Double = 0
+    @State private var accumulatedMaxTimeChange: Double = 0
+    @State private var tempPausePercentage: Int = 25
+    @State private var tempMaxWorkTime: Int = 120
     #if os(macOS)
     @Environment(\.openSettings) private var openSettings
     #endif
@@ -86,14 +93,44 @@ struct TimerView: View {
                 )
                 
                 HStack(spacing: 20) {
-                    Text("Break: \(timerService.settings.selectedPausePercentage)%")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    Text("Break: \(tempPausePercentage)%")
+                        .font(isAdjustingPausePercentage ? .body : .caption)
+                        .fontWeight(isAdjustingPausePercentage ? .medium : .regular)
+                        .foregroundColor(isAdjustingPausePercentage ? themeService.currentTheme.primaryRingColor.color : .secondary)
+                        .animation(.easeInOut(duration: 0.2), value: isAdjustingPausePercentage)
+                        .animation(.easeInOut(duration: 0.1), value: tempPausePercentage)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .contentShape(Rectangle())
+                        .gesture(
+                            DragGesture(minimumDistance: 0)
+                                .onChanged { value in
+                                    handlePausePercentageAdjustment(value)
+                                }
+                                .onEnded { _ in
+                                    finishPausePercentageAdjustment()
+                                }
+                        )
                     
                     if timerService.settings.maxWorkTimeEnabled {
-                        Text("Max: \(timerService.settings.maxWorkTimeMinutes)m")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        Text("Max: \(tempMaxWorkTime)m")
+                            .font(isAdjustingMaxWorkTime ? .body : .caption)
+                            .fontWeight(isAdjustingMaxWorkTime ? .medium : .regular)
+                            .foregroundColor(isAdjustingMaxWorkTime ? themeService.currentTheme.primaryRingColor.color : .secondary)
+                            .animation(.easeInOut(duration: 0.2), value: isAdjustingMaxWorkTime)
+                            .animation(.easeInOut(duration: 0.1), value: tempMaxWorkTime)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .contentShape(Rectangle())
+                            .gesture(
+                                DragGesture(minimumDistance: 0)
+                                    .onChanged { value in
+                                        handleMaxWorkTimeAdjustment(value)
+                                    }
+                                    .onEnded { _ in
+                                        finishMaxWorkTimeAdjustment()
+                                    }
+                            )
                     }
                 }
                 
@@ -146,7 +183,13 @@ struct TimerView: View {
                 #endif
             }
         }
+        .onAppear {
+            tempPausePercentage = timerService.settings.selectedPausePercentage
+            tempMaxWorkTime = timerService.settings.maxWorkTimeMinutes
+        }
         .animation(.easeInOut(duration: 0.3), value: themeService.currentTheme.id)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isAdjustingPausePercentage)
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isAdjustingMaxWorkTime)
         .sheet(isPresented: $showingPaywall) {
             TimerPaywallView()
                 .environmentObject(subscriptionService)
@@ -265,5 +308,129 @@ struct TimerView: View {
         }
         #endif
         timerService.resetTimer()
+    }
+    
+    private func handlePausePercentageAdjustment(_ value: DragGesture.Value) {
+        if !isAdjustingPausePercentage {
+            isAdjustingPausePercentage = true
+            lastDragValue = value.translation.width
+            accumulatedPauseChange = 0
+            tempPausePercentage = timerService.settings.selectedPausePercentage
+            
+            #if os(iOS)
+            let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+            impactFeedback.impactOccurred()
+            #endif
+            return
+        }
+        
+        // Calculate delta from last frame
+        let delta = value.translation.width - lastDragValue
+        let sensitivity: Double = 0.3
+        
+        // Accumulate the change with sensitivity
+        accumulatedPauseChange += Double(delta) * sensitivity
+        
+        // Apply accumulated change when it exceeds the snap increment (5)
+        let snapIncrement: Double = 5.0
+        if abs(accumulatedPauseChange) >= snapIncrement {
+            let increments = Int(accumulatedPauseChange / snapIncrement)
+            let change = Double(increments) * snapIncrement
+            
+            // Update value with bounds checking
+            let newPercentage = max(10, min(50, timerService.settings.selectedPausePercentage + Int(change)))
+            
+            if newPercentage != tempPausePercentage {
+                tempPausePercentage = newPercentage
+                timerService.settings.selectedPausePercentage = newPercentage
+                
+                #if os(iOS)
+                let selectionFeedback = UISelectionFeedbackGenerator()
+                selectionFeedback.selectionChanged()
+                #elseif os(macOS)
+                NSSound.beep()
+                #endif
+            }
+            
+            // Reset accumulated change by the amount we used
+            accumulatedPauseChange -= change
+        }
+        
+        lastDragValue = value.translation.width
+    }
+    
+    private func finishPausePercentageAdjustment() {
+        withAnimation(.easeOut(duration: 0.3)) {
+            isAdjustingPausePercentage = false
+        }
+        accumulatedPauseChange = 0
+        lastDragValue = 0
+        
+        #if os(iOS)
+        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+        impactFeedback.impactOccurred()
+        #endif
+    }
+    
+    private func handleMaxWorkTimeAdjustment(_ value: DragGesture.Value) {
+        if !isAdjustingMaxWorkTime {
+            isAdjustingMaxWorkTime = true
+            lastDragValue = value.translation.width
+            accumulatedMaxTimeChange = 0
+            tempMaxWorkTime = timerService.settings.maxWorkTimeMinutes
+            
+            #if os(iOS)
+            let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+            impactFeedback.impactOccurred()
+            #endif
+            return
+        }
+        
+        // Calculate delta from last frame
+        let delta = value.translation.width - lastDragValue
+        let sensitivity: Double = 0.5
+        
+        // Accumulate the change with sensitivity
+        accumulatedMaxTimeChange += Double(delta) * sensitivity
+        
+        // Apply accumulated change when it exceeds the snap increment (5)
+        let snapIncrement: Double = 5.0
+        if abs(accumulatedMaxTimeChange) >= snapIncrement {
+            let increments = Int(accumulatedMaxTimeChange / snapIncrement)
+            let change = Double(increments) * snapIncrement
+            
+            // Update value with bounds checking
+            let newMaxTime = max(15, min(480, timerService.settings.maxWorkTimeMinutes + Int(change)))
+            
+            if newMaxTime != tempMaxWorkTime {
+                tempMaxWorkTime = newMaxTime
+                timerService.settings.maxWorkTimeMinutes = newMaxTime
+                
+                #if os(iOS)
+                let selectionFeedback = UISelectionFeedbackGenerator()
+                selectionFeedback.selectionChanged()
+                #elseif os(macOS)
+                NSSound.beep()
+                #endif
+            }
+            
+            // Reset accumulated change by the amount we used
+            accumulatedMaxTimeChange -= change
+        }
+        
+        lastDragValue = value.translation.width
+    }
+    
+    private func finishMaxWorkTimeAdjustment() {
+        withAnimation(.easeOut(duration: 0.3)) {
+            isAdjustingMaxWorkTime = false
+        }
+        accumulatedMaxTimeChange = 0
+        lastDragValue = 0
+        
+        #if os(iOS)
+        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+        impactFeedback.impactOccurred()
+        #endif
     }
 }
