@@ -14,26 +14,34 @@ struct TimerDisplayView: View {
     let useStackedDisplay: Bool
     
     var body: some View {
-        if useStackedDisplay {
-            VStack(spacing: -5) {
-                Text(hoursString)
-                    .font(.system(size: 48, weight: .light, design: .monospaced))
+        Group {
+            if useStackedDisplay {
+                VStack(spacing: -5) {
+                    Text(hoursString)
+                        .font(.system(size: 48, weight: .light, design: .monospaced))
+                        .foregroundColor(displayColor)
+                    
+                    Text(minutesString)
+                        .font(.system(size: 48, weight: .light, design: .monospaced))
+                        .foregroundColor(displayColor)
+                    
+                    Text(secondsString)
+                        .font(.system(size: 48, weight: .light, design: .monospaced))
+                        .foregroundColor(displayColor)
+                }
+            } else {
+                Text(TimeFormatter.formatSeconds(seconds))
+                    .font(.system(size: 42, weight: .light, design: .monospaced))
                     .foregroundColor(displayColor)
-                
-                Text(minutesString)
-                    .font(.system(size: 48, weight: .light, design: .monospaced))
-                    .foregroundColor(displayColor)
-                
-                Text(secondsString)
-                    .font(.system(size: 48, weight: .light, design: .monospaced))
-                    .foregroundColor(displayColor)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
             }
-        } else {
-            Text(TimeFormatter.formatSeconds(seconds))
-                .font(.system(size: 42, weight: .light, design: .monospaced))
-                .foregroundColor(displayColor)
-                .lineLimit(1)
-                .minimumScaleFactor(0.5)
+        }
+        .if(themeService.currentTheme.textGlowEnabled) { view in
+            view.shadow(
+                color: displayColor.opacity(0.8),
+                radius: CGFloat(themeService.currentTheme.textGlowRadius)
+            )
         }
     }
     

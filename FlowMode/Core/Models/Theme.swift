@@ -30,4 +30,13 @@ struct Theme: Identifiable, Codable, Equatable {
     let glowEffect: Bool
     let glowColor: CodableColor?
     let glowRadius: Double
+    
+    // Ring-specific glow effects
+    let ringGlowEnabled: Bool
+    let ringGlowRadius: Double
+    let strokeWidth: Double
+    
+    // Text glow effects
+    let textGlowEnabled: Bool
+    let textGlowRadius: Double
 }

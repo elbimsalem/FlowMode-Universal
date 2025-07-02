@@ -52,8 +52,43 @@ TimerSettings are automatically persisted to UserDefaults via Combine publishers
 The core timer logic calculates break time as a percentage of work time:
 - Work session tracking with optional maximum duration
 - Break time = work_duration × pause_percentage / 100
-- Dual progress rings: inner (work progress), outer (accumulated pause time)
+- 60-minute ring system with 5 distinct ring categories
 - Background time handling with user notification on extended absence
+
+### Timer Ring System (60-Minute Segments)
+The app uses a sophisticated multi-ring visualization system where each ring represents 60 minutes (3600 seconds):
+
+#### Ring Categories:
+1. **Max Work Time Background Rings** (Inner, Background)
+   - Show maximum work time limit as reference
+   - Simple stroke with `ringBackgroundColor`, no glow
+   - Displayed during work states when max work time is enabled
+
+2. **Work Progress Rings** (Inner, Active)
+   - Show actual elapsed work time progress
+   - Colored stroke with **inner glow effect**
+   - Variants: completed rings (full 60min) and current active ring (partial progress)
+
+3. **Expected Pause Time Background Rings** (Outer, Background)
+   - Show expected break time based on max work time × pause percentage
+   - Simple stroke with `ringBackgroundColor`, no glow
+   - Displayed when max work time enabled AND showExpectedPauseRings setting is true
+
+4. **Earned Break Rings** (Outer, Active)
+   - Show accumulated break time being earned during work sessions
+   - Colored stroke with **outer glow effect**
+   - Displayed during work states (working, workPaused)
+
+5. **Break Consumption Rings** (Outer, Active)
+   - Show actual break time being consumed during break periods
+   - Colored stroke with **outer glow effect**
+   - Displayed during break states (breaking, breakPaused)
+
+#### Ring Positioning:
+- **Inner rings**: Max Work Time + Work Progress (smaller diameter)
+- **Outer rings**: Expected Pause Time + Earned Break + Break Consumption (larger diameter)
+- **Glow effects**: Theme-controlled via `ringGlowEnabled` property (Work Progress: inner glow, Earned Break + Break Consumption: outer glow)
+- **Stroke width**: Theme-controlled via `strokeWidth` property for customized ring thickness per theme
 
 ## Subscription Integration
 

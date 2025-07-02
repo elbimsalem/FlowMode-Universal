@@ -29,15 +29,42 @@ struct ThemeSelectionView: View {
                 .font(.title2)
                 .fontWeight(.semibold)
             
-            LazyVGrid(columns: [GridItem(.flexible())], spacing: 12) {
-                ForEach(themeService.availableThemes) { theme in
-                    ThemeCard(
-                        theme: theme,
-                        isSelected: theme.id == themeService.currentTheme.id,
-                        isLocked: !themeService.canSelectTheme(theme, subscriptionStatus: subscriptionService.subscriptionStatus),
-                        currentTheme: themeService.currentTheme
-                    ) {
-                        handleThemeSelection(theme)
+            // Free Theme Section
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Free")
+                    .font(.headline)
+                    .foregroundColor(themeService.currentTheme.primaryTextColor.color)
+                
+                LazyVGrid(columns: [GridItem(.flexible())], spacing: 12) {
+                    ForEach(freeThemes) { theme in
+                        ThemeCard(
+                            theme: theme,
+                            isSelected: theme.id == themeService.currentTheme.id,
+                            isLocked: !themeService.canSelectTheme(theme, subscriptionStatus: subscriptionService.subscriptionStatus),
+                            currentTheme: themeService.currentTheme
+                        ) {
+                            handleThemeSelection(theme)
+                        }
+                    }
+                }
+            }
+            
+            // Premium Themes Section
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Premium")
+                    .font(.headline)
+                    .foregroundColor(themeService.currentTheme.primaryTextColor.color)
+                
+                LazyVGrid(columns: [GridItem(.flexible())], spacing: 12) {
+                    ForEach(premiumThemes) { theme in
+                        ThemeCard(
+                            theme: theme,
+                            isSelected: theme.id == themeService.currentTheme.id,
+                            isLocked: !themeService.canSelectTheme(theme, subscriptionStatus: subscriptionService.subscriptionStatus),
+                            currentTheme: themeService.currentTheme
+                        ) {
+                            handleThemeSelection(theme)
+                        }
                     }
                 }
             }
@@ -47,22 +74,51 @@ struct ThemeSelectionView: View {
         .padding(24)
         #else
         NavigationView {
-            List(themeService.availableThemes) { theme in
-                ThemeCard(
-                    theme: theme,
-                    isSelected: theme.id == themeService.currentTheme.id,
-                    isLocked: !themeService.canSelectTheme(theme, subscriptionStatus: subscriptionService.subscriptionStatus),
-                    currentTheme: themeService.currentTheme
-                ) {
-                    handleThemeSelection(theme)
+            List {
+                // Free Theme Section
+                Section("Free") {
+                    ForEach(freeThemes) { theme in
+                        ThemeCard(
+                            theme: theme,
+                            isSelected: theme.id == themeService.currentTheme.id,
+                            isLocked: !themeService.canSelectTheme(theme, subscriptionStatus: subscriptionService.subscriptionStatus),
+                            currentTheme: themeService.currentTheme
+                        ) {
+                            handleThemeSelection(theme)
+                        }
+                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                        .listRowBackground(Color.clear)
+                    }
                 }
-                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
-                .listRowBackground(Color.clear)
+                
+                // Premium Themes Section
+                Section("Premium") {
+                    ForEach(premiumThemes) { theme in
+                        ThemeCard(
+                            theme: theme,
+                            isSelected: theme.id == themeService.currentTheme.id,
+                            isLocked: !themeService.canSelectTheme(theme, subscriptionStatus: subscriptionService.subscriptionStatus),
+                            currentTheme: themeService.currentTheme
+                        ) {
+                            handleThemeSelection(theme)
+                        }
+                        .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                        .listRowBackground(Color.clear)
+                    }
+                }
             }
             .scrollContentBackground(.hidden)
             .themedBackground(themeService.currentTheme)
         }
         #endif
+    }
+    
+    private var freeThemes: [Theme] {
+        themeService.availableThemes.filter { !$0.isPremium }
+    }
+    
+    private var premiumThemes: [Theme] {
+        themeService.availableThemes.filter { $0.isPremium }
     }
     
     private func handleThemeSelection(_ theme: Theme) {

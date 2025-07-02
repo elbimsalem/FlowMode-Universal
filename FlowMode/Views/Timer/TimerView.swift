@@ -347,8 +347,6 @@ struct TimerView: View {
                 #if os(iOS)
                 let selectionFeedback = UISelectionFeedbackGenerator()
                 selectionFeedback.selectionChanged()
-                #elseif os(macOS)
-                NSSound.beep()
                 #endif
             }
             
@@ -409,8 +407,6 @@ struct TimerView: View {
                 #if os(iOS)
                 let selectionFeedback = UISelectionFeedbackGenerator()
                 selectionFeedback.selectionChanged()
-                #elseif os(macOS)
-                NSSound.beep()
                 #endif
             }
             

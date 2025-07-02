@@ -23,7 +23,33 @@ struct ThemeProvider {
             gradientEndColor: nil,
             glowEffect: false,
             glowColor: nil,
-            glowRadius: 0
+            glowRadius: 0,
+            ringGlowEnabled: false,
+            ringGlowRadius: 0,
+            strokeWidth: 8,
+            textGlowEnabled: false,
+            textGlowRadius: 0
+        ),
+        Theme(
+            id: "minimal",
+            name: "Minimal",
+            isPremium: false,
+            primaryRingColor: CodableColor(color: .white),
+            secondaryRingColor: CodableColor(color: Color(hex: "808080")),
+            ringBackgroundColor: CodableColor(color: Color(hex: "333333")),
+            primaryTextColor: CodableColor(color: .white),
+            secondaryTextColor: CodableColor(color: Color(hex: "CCCCCC")),
+            backgroundColor: CodableColor(color: .black),
+            useGradientBackground: false,
+            gradientEndColor: nil,
+            glowEffect: false,
+            glowColor: nil,
+            glowRadius: 0,
+            ringGlowEnabled: false,
+            ringGlowRadius: 0,
+            strokeWidth: 6,
+            textGlowEnabled: false,
+            textGlowRadius: 0
         ),
         Theme(
             id: "midnight",
@@ -37,9 +63,14 @@ struct ThemeProvider {
             backgroundColor: CodableColor(color: Color(hex: "0F0F1E")),
             useGradientBackground: true,
             gradientEndColor: CodableColor(color: Color(hex: "1A1A2E")),
-            glowEffect: true,
+            glowEffect: false,
             glowColor: CodableColor(color: Color(hex: "4A90E2")),
-            glowRadius: 10
+            glowRadius: 10,
+            ringGlowEnabled: true,
+            ringGlowRadius: 4,
+            strokeWidth: 8,
+            textGlowEnabled: true,
+            textGlowRadius: 3
         ),
         Theme(
             id: "forest",
@@ -55,7 +86,12 @@ struct ThemeProvider {
             gradientEndColor: CodableColor(color: Color(hex: "1A3A2A")),
             glowEffect: false,
             glowColor: nil,
-            glowRadius: 0
+            glowRadius: 0,
+            ringGlowEnabled: false,
+            ringGlowRadius: 0,
+            strokeWidth: 6,
+            textGlowEnabled: false,
+            textGlowRadius: 0
         ),
         Theme(
             id: "sunset",
@@ -69,9 +105,14 @@ struct ThemeProvider {
             backgroundColor: CodableColor(color: Color(hex: "2D1B1B")),
             useGradientBackground: true,
             gradientEndColor: CodableColor(color: Color(hex: "4A2C2C")),
-            glowEffect: true,
+            glowEffect: false,
             glowColor: CodableColor(color: Color(hex: "FF6B6B")),
-            glowRadius: 8
+            glowRadius: 8,
+            ringGlowEnabled: true,
+            ringGlowRadius: 6,
+            strokeWidth: 10,
+            textGlowEnabled: true,
+            textGlowRadius: 2
         ),
         Theme(
             id: "ocean",
@@ -85,9 +126,14 @@ struct ThemeProvider {
             backgroundColor: CodableColor(color: Color(hex: "0A1929")),
             useGradientBackground: true,
             gradientEndColor: CodableColor(color: Color(hex: "1A3A4A")),
-            glowEffect: true,
+            glowEffect: false,
             glowColor: CodableColor(color: Color(hex: "00BCD4")),
-            glowRadius: 12
+            glowRadius: 12,
+            ringGlowEnabled: true,
+            ringGlowRadius: 5,
+            strokeWidth: 9,
+            textGlowEnabled: true,
+            textGlowRadius: 4
         )
     ]
     

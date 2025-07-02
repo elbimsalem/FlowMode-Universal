@@ -16,10 +16,24 @@ struct TimerProgressRing: View {
     let timerState: TimerState
     let pauseProgress: CGFloat
     
-    private let strokeWidth: CGFloat = 8
     private let baseRingSize: CGFloat = 200
     private let ringSpacing: CGFloat = 20
     private let minRingSize: CGFloat = 80
+    private let pauseRingGap: CGFloat = 10 // Extra space between work and pause rings
+    private let glowOffset: CGFloat = 8
+    
+    // Theme-based properties
+    private var strokeWidth: CGFloat {
+        CGFloat(themeService.currentTheme.strokeWidth)
+    }
+    
+    private var glowRadius: CGFloat {
+        CGFloat(themeService.currentTheme.ringGlowRadius)
+    }
+    
+    private var ringGlowEnabled: Bool {
+        themeService.currentTheme.ringGlowEnabled
+    }
     
     var body: some View {
         ZStack {
@@ -42,7 +56,7 @@ struct TimerProgressRing: View {
             if timerService.settings.maxWorkTimeEnabled && timerService.settings.showExpectedPauseRings {
                 ForEach(0..<expectedPauseRingCount, id: \.self) { ringIndex in
                     if let expectedProgress = expectedPauseProgressForRing(ringIndex) {
-                        let ringSize = baseRingSize + CGFloat(ringIndex + 1) * ringSpacing
+                        let ringSize = baseRingSize + pauseRingGap + CGFloat(ringIndex + 1) * ringSpacing
                         Circle()
                             .trim(from: 0, to: expectedProgress)
                             .stroke(themeService.currentTheme.ringBackgroundColor.color, style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round))
@@ -60,26 +74,50 @@ struct TimerProgressRing: View {
                 // Work progress ring - only show for completed rings and current active ring
                 if ringIndex < currentWorkRingIndex {
                     // Completed rings - fill entire 60 minutes
-                    Circle()
-                        .trim(from: 0, to: 1.0)
-                        .stroke(workRingColor, style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round))
-                        .frame(width: ringSize, height: ringSize)
-                        .rotationEffect(.degrees(-90))
+                    ZStack {
+                        // Inner glow effect - only if enabled by theme
+                        if ringGlowEnabled {
+                            Circle()
+                                .trim(from: 0, to: 1.0)
+                                .stroke(workRingColor.opacity(0.8), style: StrokeStyle(lineWidth: strokeWidth * 2, lineCap: .round))
+                                .frame(width: ringSize - strokeWidth * 2, height: ringSize - strokeWidth * 2)
+                                .blur(radius: glowRadius)
+                        }
+                        
+                        // Main work ring
+                        Circle()
+                            .trim(from: 0, to: 1.0)
+                            .stroke(workRingColor, style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round))
+                            .frame(width: ringSize, height: ringSize)
+                    }
+                    .rotationEffect(.degrees(-90))
                 } else if ringIndex == currentWorkRingIndex {
                     // Current active ring - fill based on progress within this 60-minute segment
-                    Circle()
-                        .trim(from: 0, to: timerService.workRingProgress)
-                        .stroke(workRingColor, style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round))
-                        .frame(width: ringSize, height: ringSize)
-                        .rotationEffect(.degrees(-90))
-                        .animation(.easeInOut(duration: 0.3), value: timerService.workRingProgress)
+                    ZStack {
+                        // Inner glow effect - only if enabled by theme
+                        if ringGlowEnabled {
+                            Circle()
+                                .trim(from: 0, to: timerService.workRingProgress)
+                                .stroke(workRingColor.opacity(0.8), style: StrokeStyle(lineWidth: strokeWidth * 2, lineCap: .round))
+                                .frame(width: ringSize - strokeWidth * 2, height: ringSize - strokeWidth * 2)
+                                .blur(radius: glowRadius)
+                        }
+                        
+                        // Main work ring
+                        Circle()
+                            .trim(from: 0, to: timerService.workRingProgress)
+                            .stroke(workRingColor, style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round))
+                            .frame(width: ringSize, height: ringSize)
+                    }
+                    .rotationEffect(.degrees(-90))
+                    .animation(.easeInOut(duration: 0.3), value: timerService.workRingProgress)
                 }
             }
             
             // Pause/Break rings - show accumulated break time during work, actual break time during breaks
             if timerService.pauseRingCount > 0 {
                 ForEach(0..<timerService.pauseRingCount, id: \.self) { ringIndex in
-                    let ringSize = baseRingSize + CGFloat(ringIndex + 1) * ringSpacing
+                    let ringSize = baseRingSize + pauseRingGap + CGFloat(ringIndex + 1) * ringSpacing
                     
                     if timerService.timerState == .working || timerService.timerState == .workPaused {
                         // During work: show accumulated break time being earned
@@ -88,20 +126,44 @@ struct TimerProgressRing: View {
                         
                         if ringIndex < currentEarnedRingIndex {
                             // Completed earned break rings
-                            Circle()
-                                .trim(from: 0, to: 1.0)
-                                .stroke(themeService.currentTheme.secondaryRingColor.color.opacity(0.6), style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round))
-                                .frame(width: ringSize, height: ringSize)
-                                .rotationEffect(.degrees(-90))
+                            ZStack {
+                                // Outer glow effect - only if enabled by theme
+                                if ringGlowEnabled {
+                                    Circle()
+                                        .trim(from: 0, to: 1.0)
+                                        .stroke(themeService.currentTheme.secondaryRingColor.color.opacity(0.6), style: StrokeStyle(lineWidth: strokeWidth * 2, lineCap: .round))
+                                        .frame(width: ringSize + strokeWidth * 2, height: ringSize + strokeWidth * 2)
+                                        .blur(radius: glowRadius)
+                                }
+                                
+                                // Main pause ring
+                                Circle()
+                                    .trim(from: 0, to: 1.0)
+                                    .stroke(themeService.currentTheme.secondaryRingColor.color.opacity(0.6), style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round))
+                                    .frame(width: ringSize, height: ringSize)
+                            }
+                            .rotationEffect(.degrees(-90))
                         } else if ringIndex == currentEarnedRingIndex {
                             // Current earned break ring
                             let progressInCurrentRing = CGFloat(earnedBreakSeconds % (60 * 60)) / CGFloat(60 * 60)
-                            Circle()
-                                .trim(from: 0, to: progressInCurrentRing)
-                                .stroke(themeService.currentTheme.secondaryRingColor.color.opacity(0.6), style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round))
-                                .frame(width: ringSize, height: ringSize)
-                                .rotationEffect(.degrees(-90))
-                                .animation(.easeInOut(duration: 0.3), value: progressInCurrentRing)
+                            ZStack {
+                                // Outer glow effect - only if enabled by theme
+                                if ringGlowEnabled {
+                                    Circle()
+                                        .trim(from: 0, to: progressInCurrentRing)
+                                        .stroke(themeService.currentTheme.secondaryRingColor.color.opacity(0.6), style: StrokeStyle(lineWidth: strokeWidth * 2, lineCap: .round))
+                                        .frame(width: ringSize + strokeWidth * 2, height: ringSize + strokeWidth * 2)
+                                        .blur(radius: glowRadius)
+                                }
+                                
+                                // Main pause ring
+                                Circle()
+                                    .trim(from: 0, to: progressInCurrentRing)
+                                    .stroke(themeService.currentTheme.secondaryRingColor.color.opacity(0.6), style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round))
+                                    .frame(width: ringSize, height: ringSize)
+                            }
+                            .rotationEffect(.degrees(-90))
+                            .animation(.easeInOut(duration: 0.3), value: progressInCurrentRing)
                         }
                     } else if timerService.timerState == .breaking || timerService.timerState == .breakPaused {
                         // During break: show actual break time consumption
@@ -110,19 +172,43 @@ struct TimerProgressRing: View {
                         
                         if ringIndex < currentBreakRingIndex {
                             // Completed break rings
-                            Circle()
-                                .trim(from: 0, to: 1.0)
-                                .stroke(themeService.currentTheme.secondaryRingColor.color, style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round))
-                                .frame(width: ringSize, height: ringSize)
-                                .rotationEffect(.degrees(-90))
+                            ZStack {
+                                // Outer glow effect - only if enabled by theme
+                                if ringGlowEnabled {
+                                    Circle()
+                                        .trim(from: 0, to: 1.0)
+                                        .stroke(themeService.currentTheme.secondaryRingColor.color.opacity(0.6), style: StrokeStyle(lineWidth: strokeWidth * 2, lineCap: .round))
+                                        .frame(width: ringSize + strokeWidth * 2, height: ringSize + strokeWidth * 2)
+                                        .blur(radius: glowRadius)
+                                }
+                                
+                                // Main pause ring
+                                Circle()
+                                    .trim(from: 0, to: 1.0)
+                                    .stroke(themeService.currentTheme.secondaryRingColor.color, style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round))
+                                    .frame(width: ringSize, height: ringSize)
+                            }
+                            .rotationEffect(.degrees(-90))
                         } else if ringIndex == currentBreakRingIndex {
                             // Current active break ring
-                            Circle()
-                                .trim(from: 0, to: timerService.pauseRingProgress)
-                                .stroke(themeService.currentTheme.secondaryRingColor.color, style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round))
-                                .frame(width: ringSize, height: ringSize)
-                                .rotationEffect(.degrees(-90))
-                                .animation(.easeInOut(duration: 0.3), value: timerService.pauseRingProgress)
+                            ZStack {
+                                // Outer glow effect - only if enabled by theme
+                                if ringGlowEnabled {
+                                    Circle()
+                                        .trim(from: 0, to: timerService.pauseRingProgress)
+                                        .stroke(themeService.currentTheme.secondaryRingColor.color.opacity(0.6), style: StrokeStyle(lineWidth: strokeWidth * 2, lineCap: .round))
+                                        .frame(width: ringSize + strokeWidth * 2, height: ringSize + strokeWidth * 2)
+                                        .blur(radius: glowRadius)
+                                }
+                                
+                                // Main pause ring
+                                Circle()
+                                    .trim(from: 0, to: timerService.pauseRingProgress)
+                                    .stroke(themeService.currentTheme.secondaryRingColor.color, style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round))
+                                    .frame(width: ringSize, height: ringSize)
+                            }
+                            .rotationEffect(.degrees(-90))
+                            .animation(.easeInOut(duration: 0.3), value: timerService.pauseRingProgress)
                         }
                     }
                 }

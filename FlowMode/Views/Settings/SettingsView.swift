@@ -44,6 +44,7 @@ struct SettingsView: View {
                                 .foregroundColor(themeService.currentTheme.primaryTextColor.color)
                         }
                         .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
                     }
                 }
                 .scrollContentBackground(.hidden)
@@ -110,12 +111,15 @@ struct SettingsView: View {
                                 .foregroundColor(themeService.currentTheme.primaryTextColor.color)
                         }
                         .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
                     }
                 }
                 .scrollContentBackground(.hidden)
                 .background(Color.clear)
             }
             .navigationTitle("Settings")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbarColorScheme(.dark)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
@@ -123,7 +127,7 @@ struct SettingsView: View {
                     }) {
                         Image(systemName: "xmark")
                             .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(themeService.currentTheme.primaryRingColor.color)
+                            .foregroundColor(.white)
                     }
                 }
             }
@@ -162,7 +166,7 @@ struct SettingsView: View {
                     }) {
                         Image(systemName: "xmark")
                             .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(themeService.currentTheme.primaryRingColor.color)
+                            .foregroundColor(.white)
                     }
                 }
             }
