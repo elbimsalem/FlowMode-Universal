@@ -38,13 +38,17 @@ struct TimerProgressRing: View {
                 }
             }
             
-            // Max break time background rings (during break states)
-            if timerService.timerState == .breaking || timerService.timerState == .breakPaused || timerService.timerState == .workCompleted {
-                ForEach(0..<maxBreakTimeRingCount, id: \.self) { ringIndex in
-                    let ringSize = max(minRingSize, baseRingSize - CGFloat(ringIndex) * ringSpacing)
-                    Circle()
-                        .stroke(themeService.currentTheme.ringBackgroundColor.color, lineWidth: strokeWidth)
-                        .frame(width: ringSize, height: ringSize)
+            // Expected pause time background rings (when enabled and max work time is set)
+            if timerService.settings.maxWorkTimeEnabled && timerService.settings.showExpectedPauseRings {
+                ForEach(0..<expectedPauseRingCount, id: \.self) { ringIndex in
+                    if let expectedProgress = expectedPauseProgressForRing(ringIndex) {
+                        let ringSize = baseRingSize + CGFloat(ringIndex + 1) * ringSpacing
+                        Circle()
+                            .trim(from: 0, to: expectedProgress)
+                            .stroke(themeService.currentTheme.ringBackgroundColor.color, style: StrokeStyle(lineWidth: strokeWidth, lineCap: .round))
+                            .frame(width: ringSize, height: ringSize)
+                            .rotationEffect(.degrees(-90))
+                    }
                 }
             }
             
@@ -145,6 +149,14 @@ struct TimerProgressRing: View {
         return (maxWorkTimeSeconds + secondsPerRing - 1) / secondsPerRing // Ceiling division
     }
     
+    private var expectedPauseRingCount: Int {
+        guard timerService.settings.maxWorkTimeEnabled else { return 0 }
+        let maxWorkTimeSeconds = timerService.settings.maxWorkTimeMinutes * 60
+        let expectedBreakSeconds = maxWorkTimeSeconds * timerService.settings.selectedPausePercentage / 100
+        let secondsPerRing = 60 * 60
+        return max(1, (expectedBreakSeconds + secondsPerRing - 1) / secondsPerRing) // Ceiling division
+    }
+    
     private var maxBreakTimeRingCount: Int {
         let totalBreakSeconds = timerService.elapsedSeconds * timerService.settings.selectedPausePercentage / 100
         let secondsPerRing = 60 * 60
@@ -173,6 +185,35 @@ struct TimerProgressRing: View {
         } else if maxWorkTimeSeconds > ringStartSeconds {
             // This ring is partially filled
             let progressInRing = maxWorkTimeSeconds - ringStartSeconds
+            return CGFloat(progressInRing) / CGFloat(secondsPerRing)
+        }
+        
+        return nil
+    }
+    
+    private func expectedPauseProgressForRing(_ ringIndex: Int) -> CGFloat? {
+        guard timerService.settings.maxWorkTimeEnabled else { return nil }
+        let maxWorkTimeSeconds = timerService.settings.maxWorkTimeMinutes * 60
+        let expectedBreakSeconds = maxWorkTimeSeconds * timerService.settings.selectedPausePercentage / 100
+        let secondsPerRing = 60 * 60 // 3600 seconds per ring
+        
+        // Calculate which rings are affected by expected pause time
+        let totalExpectedRings = (expectedBreakSeconds + secondsPerRing - 1) / secondsPerRing // Ceiling division
+        
+        if ringIndex >= totalExpectedRings {
+            return nil // This ring is beyond expected pause time
+        }
+        
+        // Calculate progress for this specific ring
+        let ringStartSeconds = ringIndex * secondsPerRing
+        let ringEndSeconds = (ringIndex + 1) * secondsPerRing
+        
+        if expectedBreakSeconds >= ringEndSeconds {
+            // This ring should be completely filled
+            return 1.0
+        } else if expectedBreakSeconds > ringStartSeconds {
+            // This ring is partially filled
+            let progressInRing = expectedBreakSeconds - ringStartSeconds
             return CGFloat(progressInRing) / CGFloat(secondsPerRing)
         }
         

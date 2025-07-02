@@ -32,6 +32,8 @@ struct TimerSettingsView: View {
                         
                         Toggle("Show Timer Controls", isOn: $timerService.settings.showTimerControls)
                         
+                        Toggle("Show Expected Pause Rings", isOn: $timerService.settings.showExpectedPauseRings)
+                        
                         #if os(macOS)
                         DoubleTapSoundRow(selectedSound: $timerService.settings.doubleTapFeedbackSound)
                         #endif
