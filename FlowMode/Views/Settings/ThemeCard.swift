@@ -14,6 +14,8 @@ struct ThemeCard: View {
     let currentTheme: Theme
     let action: () -> Void
     
+    @Environment(\.colorScheme) var colorScheme
+    
     var body: some View {
         Button(action: action) {
             HStack(spacing: 16) {
@@ -49,7 +51,7 @@ struct ThemeCard: View {
                     .fill(backgroundColorForPlatform)
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
-                            .stroke(isSelected ? currentTheme.primaryRingColor.color : Color.clear, lineWidth: 2)
+                            .stroke(borderColor, lineWidth: isSelected ? 2 : 1)
                     )
             )
         }
@@ -63,5 +65,18 @@ struct ThemeCard: View {
         #else
         return Color(.secondarySystemGroupedBackground)
         #endif
+    }
+    
+    private var borderColor: Color {
+        if isSelected {
+            // Selected themes use their primary ring color
+            return currentTheme.primaryRingColor.color
+        } else if colorScheme == .light {
+            // Light mode: subtle gray border for definition
+            return Color.secondary.opacity(0.3)
+        } else {
+            // Dark mode: no border (invisible)
+            return Color.clear
+        }
     }
 }

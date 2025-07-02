@@ -12,6 +12,7 @@ struct SettingsView: View {
     @EnvironmentObject var subscriptionService: SubscriptionService
     @EnvironmentObject var themeService: ThemeService
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) var colorScheme
     @State private var selectedCategory: SettingsCategory? = nil
     
     var body: some View {
@@ -119,7 +120,7 @@ struct SettingsView: View {
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.large)
-            .toolbarColorScheme(.dark)
+            .accentColor(colorScheme == .dark ? .white : .black)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
@@ -127,7 +128,7 @@ struct SettingsView: View {
                     }) {
                         Image(systemName: "xmark")
                             .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.white)
+                            .foregroundColor(colorScheme == .dark ? .white : .black)
                     }
                 }
             }
@@ -166,7 +167,7 @@ struct SettingsView: View {
                     }) {
                         Image(systemName: "xmark")
                             .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.white)
+                            .foregroundColor(colorScheme == .dark ? .white : .black)
                     }
                 }
             }
