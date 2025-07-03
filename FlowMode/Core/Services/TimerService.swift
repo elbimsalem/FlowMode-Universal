@@ -150,7 +150,7 @@ class TimerService: ObservableObject {
         timerState = .working
         startTime = Date()
         
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 0.01, repeats: true) { [weak self] _ in
             self?.updateElapsedTime()
         }
         
@@ -180,7 +180,7 @@ class TimerService: ObservableObject {
         timerState = .working
         startTime = Date().addingTimeInterval(-Double(elapsedSeconds))
         
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 0.01, repeats: true) { [weak self] _ in
             self?.updateElapsedTime()
         }
         
@@ -350,12 +350,7 @@ class TimerService: ObservableObject {
         }
     }
     
-    // MARK: - Background Time Adjustment
     
-    func adjustForBackgroundTime(_ duration: TimeInterval) {
-        guard let startTime = startTime else { return }
-        self.startTime = startTime.addingTimeInterval(-duration)
-    }
     
     private static func loadSettings() -> TimerSettings {
         guard let data = UserDefaults.standard.data(forKey: "TimerSettings") else {

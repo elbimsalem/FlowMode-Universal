@@ -77,13 +77,11 @@ class BackgroundTaskService: ObservableObject {
         // Update timer based on current state
         switch timerService.timerState {
         case .working:
-            // Timer was running when app went to background, adjust for background time
-            timerService.adjustForBackgroundTime(backgroundDuration)
-            break
+            // Timer was running when app went to background, no adjustment needed for startTime
+            timerService.resumeWorkTimer() // Restart timer to continue updates
         case .breaking:
-            // Break timer was running, adjust for background time to continue seamlessly
-            timerService.adjustForBackgroundTime(backgroundDuration)
-            break
+            // Break timer was running, no adjustment needed for pauseEndDate
+            timerService.resumeBreakTimer() // Restart timer to continue updates
         default:
             break
         }

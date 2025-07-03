@@ -17,7 +17,6 @@ struct TimerProgressRing: View {
     let pauseProgress: CGFloat
     
     private let baseRingSize: CGFloat = 200
-    private let ringSpacing: CGFloat = 20
     private let minRingSize: CGFloat = 80
     private let pauseRingGap: CGFloat = 10 // Extra space between work and pause rings
     private let glowOffset: CGFloat = 8
@@ -25,6 +24,10 @@ struct TimerProgressRing: View {
     // Theme-based properties
     private var strokeWidth: CGFloat {
         CGFloat(themeService.currentTheme.strokeWidth)
+    }
+    
+    private var ringSpacing: CGFloat {
+        CGFloat(themeService.currentTheme.ringSpacing)
     }
     
     private var glowRadius: CGFloat {

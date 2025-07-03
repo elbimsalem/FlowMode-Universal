@@ -35,6 +35,7 @@ struct Theme: Identifiable, Codable, Equatable {
     let ringGlowEnabled: Bool
     let ringGlowRadius: Double
     let strokeWidth: Double
+    let ringSpacing: Double
     
     // Text glow effects
     let textGlowEnabled: Bool

@@ -27,6 +27,7 @@ struct ThemeProvider {
             ringGlowEnabled: false,
             ringGlowRadius: 0,
             strokeWidth: 8,
+            ringSpacing: 20,
             textGlowEnabled: false,
             textGlowRadius: 0
         ),
@@ -48,6 +49,7 @@ struct ThemeProvider {
             ringGlowEnabled: false,
             ringGlowRadius: 0,
             strokeWidth: 4,
+            ringSpacing: 12,
             textGlowEnabled: false,
             textGlowRadius: 0
         ),
@@ -69,6 +71,7 @@ struct ThemeProvider {
             ringGlowEnabled: true,
             ringGlowRadius: 4,
             strokeWidth: 8,
+            ringSpacing: 20,
             textGlowEnabled: true,
             textGlowRadius: 3
         ),
@@ -90,6 +93,7 @@ struct ThemeProvider {
             ringGlowEnabled: false,
             ringGlowRadius: 0,
             strokeWidth: 6,
+            ringSpacing: 18,
             textGlowEnabled: false,
             textGlowRadius: 0
         ),
@@ -111,6 +115,7 @@ struct ThemeProvider {
             ringGlowEnabled: true,
             ringGlowRadius: 6,
             strokeWidth: 10,
+            ringSpacing: 24,
             textGlowEnabled: true,
             textGlowRadius: 2
         ),
@@ -132,6 +137,7 @@ struct ThemeProvider {
             ringGlowEnabled: true,
             ringGlowRadius: 5,
             strokeWidth: 9,
+            ringSpacing: 22,
             textGlowEnabled: true,
             textGlowRadius: 4
         )

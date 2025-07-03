@@ -157,27 +157,65 @@ struct TimerView: View {
             }
             
             // Settings button overlay - positioned independently
-            VStack {
-                Spacer()
+            GeometryReader { geometry in
+                let isLandscape = geometry.size.width > geometry.size.height
                 
-                Button(action: {
-                    #if os(macOS)
-                    openSettings()
-                    #else
-                    showingSettings = true
-                    #endif
-                }) {
-                    Image(systemName: "gearshape.fill")
-                        .font(.title2)
-                        .foregroundColor(themeService.currentTheme.secondaryTextColor.color)
-                        .opacity(0.7)
+                #if os(iOS)
+                VStack {
+                    if isLandscape {
+                        // Landscape: Position at bottom right
+                        Spacer()
+                        HStack {
+                            Spacer()
+                            Button(action: {
+                                showingSettings = true
+                            }) {
+                                Image(systemName: "gearshape.fill")
+                                    .font(.title2)
+                                    .foregroundColor(themeService.currentTheme.secondaryTextColor.color)
+                                    .opacity(0.7)
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.trailing, 40)
+                        }
+                        .padding(.bottom, 40)
+                    } else {
+                        // Portrait: Position at the bottom center
+                        Spacer()
+                        HStack {
+                            Spacer()
+                            Button(action: {
+                                showingSettings = true
+                            }) {
+                                Image(systemName: "gearshape.fill")
+                                    .font(.title2)
+                                    .foregroundColor(themeService.currentTheme.secondaryTextColor.color)
+                                    .opacity(0.7)
+                            }
+                            .buttonStyle(.plain)
+                            Spacer()
+                        }
+                        .padding(.bottom, 40)
+                    }
                 }
-                .buttonStyle(.plain)
-                .padding(.bottom, 40)
-                #if os(macOS)
-                .onHover { hovering in
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        // Could add hover effect here if desired
+                #else
+                // macOS: Keep existing positioning
+                VStack {
+                    Spacer()
+                    Button(action: {
+                        openSettings()
+                    }) {
+                        Image(systemName: "gearshape.fill")
+                            .font(.title2)
+                            .foregroundColor(themeService.currentTheme.secondaryTextColor.color)
+                            .opacity(0.7)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.bottom, 40)
+                    .onHover { hovering in
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            // Could add hover effect here if desired
+                        }
                     }
                 }
                 #endif
