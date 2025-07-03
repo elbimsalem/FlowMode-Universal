@@ -69,10 +69,8 @@ struct SettingsView: View {
                         SubscriptionView()
                     case .about:
                         AboutSettingsView()
-                    #if DEBUG
-                    case .debug:
+                    case .testing:
                         DebugSettingsView()
-                    #endif
                     }
                 } else {
                     ContentUnavailableView(
@@ -147,10 +145,8 @@ struct SettingsView: View {
                         SubscriptionView()
                     case .about:
                         AboutSettingsView()
-                    #if DEBUG
-                    case .debug:
+                    case .testing:
                         DebugSettingsView()
-                    #endif
                     }
                 } else {
                     ContentUnavailableView(
