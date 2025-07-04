@@ -56,7 +56,7 @@ struct TimerProgressRing: View {
             }
             
             // Expected pause time background rings (when enabled and max work time is set)
-            if timerService.settings.maxWorkTimeEnabled && timerService.settings.showExpectedPauseRings {
+            if timerService.settings.maxWorkTimeEnabled && timerService.settings.showExpectedPauseRings && timerService.timerState != .workCompleted && timerService.timerState != .breaking && timerService.timerState != .breakPaused {
                 ForEach(0..<expectedPauseRingCount, id: \.self) { ringIndex in
                     if let expectedProgress = expectedPauseProgressForRing(ringIndex) {
                         let ringSize = baseRingSize + pauseRingGap + CGFloat(ringIndex + 1) * ringSpacing

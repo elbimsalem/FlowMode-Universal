@@ -91,6 +91,8 @@ class TimerService: ObservableObject {
         case .breaking, .breakPaused:
             let totalBreakSeconds = elapsedSeconds * settings.selectedPausePercentage / 100
             return max(1, (totalBreakSeconds / Self.secondsPerRing) + 1)
+        case .workCompleted:
+            return 0 // Do not show earned break ring when work is completed
         default:
             let earnedBreakSeconds = elapsedSeconds * settings.selectedPausePercentage / 100
             // Always show at least 1 ring to display earned break time, add more for each 60min earned
@@ -108,6 +110,8 @@ class TimerService: ObservableObject {
                 return CGFloat(progressInCurrentRing) / CGFloat(Self.secondsPerRing)
             }
             return 0.0
+        case .workCompleted:
+            return 0.0 // Do not show earned break ring progress when work is completed
         default:
             let earnedBreakSeconds = elapsedSeconds * settings.selectedPausePercentage / 100
             let progressInCurrentRing = earnedBreakSeconds % Self.secondsPerRing
