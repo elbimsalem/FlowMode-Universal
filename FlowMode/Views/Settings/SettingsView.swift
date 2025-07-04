@@ -56,28 +56,30 @@ struct SettingsView: View {
             .toolbar(removing: .sidebarToggle)
         } detail: {
             // Detail view
-            Group {
-                if let selectedCategory = selectedCategory {
-                    switch selectedCategory {
-                    case .timer:
-                        TimerSettingsView()
-                    case .theme:
-                        ThemeSelectionView()
-                    case .notifications:
-                        NotificationSettingsView()
-                    case .subscription:
-                        SubscriptionView()
-                    case .about:
-                        AboutSettingsView()
-                    case .testing:
-                        DebugSettingsView()
+            ScrollView {
+                Group {
+                    if let selectedCategory = selectedCategory {
+                        switch selectedCategory {
+                        case .timer:
+                            TimerSettingsView()
+                        case .theme:
+                            ThemeSelectionView()
+                        case .notifications:
+                            NotificationSettingsView()
+                        case .subscription:
+                            SubscriptionView()
+                        case .about:
+                            AboutSettingsView()
+                        case .testing:
+                            DebugSettingsView()
+                        }
+                    } else {
+                        ContentUnavailableView(
+                            "Select a Setting",
+                            systemImage: "gearshape",
+                            description: Text("Choose a setting category from the sidebar")
+                        )
                     }
-                } else {
-                    ContentUnavailableView(
-                        "Select a Setting",
-                        systemImage: "gearshape",
-                        description: Text("Choose a setting category from the sidebar")
-                    )
                 }
             }
             .navigationSplitViewColumnWidth(min: 400, ideal: 600)

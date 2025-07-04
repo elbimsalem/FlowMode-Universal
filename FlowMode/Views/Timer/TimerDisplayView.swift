@@ -18,20 +18,20 @@ struct TimerDisplayView: View {
             if useStackedDisplay {
                 VStack(spacing: -5) {
                     Text(hoursString)
-                        .font(.system(size: 48, weight: .light, design: .monospaced))
+                        .font(themeService.currentTheme.timerFont.font)
                         .foregroundColor(displayColor)
-                    
+
                     Text(minutesString)
-                        .font(.system(size: 48, weight: .light, design: .monospaced))
+                        .font(themeService.currentTheme.timerFont.font)
                         .foregroundColor(displayColor)
-                    
+
                     Text(secondsString)
-                        .font(.system(size: 48, weight: .light, design: .monospaced))
+                        .font(themeService.currentTheme.timerFont.font)
                         .foregroundColor(displayColor)
                 }
             } else {
                 Text(TimeFormatter.formatSeconds(seconds))
-                    .font(.system(size: 42, weight: .light, design: .monospaced))
+                    .font(themeService.currentTheme.timerFont.font)
                     .foregroundColor(displayColor)
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)

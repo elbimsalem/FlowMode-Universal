@@ -40,4 +40,7 @@ struct Theme: Identifiable, Codable, Equatable {
     // Text glow effects
     let textGlowEnabled: Bool
     let textGlowRadius: Double
+
+    // Font properties
+    let timerFont: CodableFont
 }
