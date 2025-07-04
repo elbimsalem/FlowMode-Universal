@@ -202,15 +202,19 @@ struct TimerView: View {
                 // macOS: Keep existing positioning
                 VStack {
                     Spacer()
-                    Button(action: {
-                        openSettings()
-                    }) {
-                        Image(systemName: "gearshape.fill")
-                            .font(.title2)
-                            .foregroundColor(themeService.currentTheme.secondaryTextColor.color)
-                            .opacity(0.7)
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            openSettings()
+                        }) {
+                            Image(systemName: "gearshape.fill")
+                                .font(.title2)
+                                .foregroundColor(themeService.currentTheme.secondaryTextColor.color)
+                                .opacity(0.7)
+                        }
+                        .buttonStyle(.plain)
+                        Spacer()
                     }
-                    .buttonStyle(.plain)
                     .padding(.bottom, 40)
                     .onHover { hovering in
                         withAnimation(.easeInOut(duration: 0.2)) {
